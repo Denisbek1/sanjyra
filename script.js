@@ -1149,7 +1149,7 @@ function render() {
             ancestryEl.innerHTML = ancestryExpanded ? `
                 <div class="ancestry-shell">
                     <div class="ancestry-head">
-                        <div class="ancestry-head-icon"><img src="assets/atatek.jpg" alt="Ата-тек"></div>
+                        <div class="ancestry-head-icon"><img src="assets/atatek.png" alt="Ата-тек"></div>
                         <div class="ancestry-head-copy">
                             <div class="ancestry-head-title">Ата-тек жөнүндө</div>
                             <div class="ancestry-head-sub">Негизги муундардын тарыхы</div>
@@ -1168,7 +1168,7 @@ function render() {
             ` : `
                 <div class="ancestry-shell">
                     <div class="ancestry-head">
-                        <div class="ancestry-head-icon"><img src="assets/atatek.jpg" alt="Ата-тек"></div>
+                        <div class="ancestry-head-icon"><img src="assets/atatek.png" alt="Ата-тек"></div>
                         <div class="ancestry-head-copy">
                             <div class="ancestry-head-title">Ата-тек</div>
                             <div class="ancestry-head-sub">Кеңири көрүү үчүн басыңыз</div>
