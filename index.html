@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ky" translate="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="google" content="notranslate">
+    <title>Абдраман атанын санжырасы</title>
+    <meta property="og:title" content="Абдраман атанын санжырасы">
+    <meta property="og:description" content="Ата-бабанын тарыхын сактаган үй-бүлөлүк санжыра">
+    <meta property="og:image" content="assets/preview.jpg">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://animated-pavlova-d7f6cb.netlify.app/">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Абдраман атанын санжырасы">
+    <meta name="twitter:description" content="Ата-бабанын тарыхын сактаган үй-бүлөлүк санжыра">
+    <meta name="twitter:image" content="assets/preview.jpg">
+    <link rel="icon" type="image/png" href="assets/sanjyra-icon.png">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body translate="no">
+    <div class="top-bar">
+        <button id="mobile-menu-btn" class="menu-btn" onclick="openSidebar()" title="Меню" aria-label="Меню">☰</button>
+        <div id="top-search-bar">
+            <div class="search-wrapper">
+                <img src="assets/sanjyra-icon.png" class="search-icon" alt="">
+                <input id="personSearch" type="text" placeholder="Имя" aria-label="Поиск по имени" class="search-bar">
+            </div>
+            <div class="search-panel-actions">
+                <button id="search-close-btn" type="button" class="search-close-btn" onclick="closeSearchPanel()">✕ Жабуу</button>
+            </div>
+            <div id="search-results" class="search-results"></div>
+        </div>
+    </div>
+    <div id="home-btn" onclick="resetView()" title="Башына кайтуу">
+        <i class="fas fa-home"></i>
+    </div>
+    <div id="reset-tree-btn" onclick="resetTree()" title="Reset Tree">
+        <i class="fas fa-undo"></i>
+    </div>
+    <div id="sidebar-overlay" onclick="if(event.target === this) closeSidebar()">
+        <aside id="mobile-sidebar" onclick="event.stopPropagation()">
+            <div class="sidebar-head">
+                <div class="sidebar-title">Меню</div>
+                <button class="sidebar-close" onclick="closeSidebar()" aria-label="Жабуу">&times;</button>
+            </div>
+            <div class="sidebar-menu">
+                <button class="sidebar-item" onclick="openSidebarSection('goal')">1. Сайттын максаты</button>
+                <button class="sidebar-item" onclick="openSidebarSection('share')">2. Бөлүшүү</button>
+                <button class="sidebar-item" onclick="openSidebarSection('contact')">3. Байланыш</button>
+            </div>
+            <div id="sidebar-content" class="sidebar-content">
+                <section id="sidebar-section-goal" class="sidebar-section">
+                    <h3>Сайттын максаты</h3>
+                    <p>Бул сайт Абдраман атанын урпактарынын санжырасын сактоо жана көрсөтүү үчүн түзүлгөн.</p>
+                    <p>Бул жерде биздин ата-бабаларыбыздын тарыхы, урпактары жана туугандык байланыштары чогултулат. Сайттын негизги максаты — үй-бүлөнүн тарыхын жоготпой, кийинки муундарга жеткирүү.</p>
+                    <p>Санжырада ар бир үй-бүлө бутагы өзүнүн түсү менен көрсөтүлөт. Бул түстөр аркылуу ар бир адам кайсы бутактан тараганын оңой түшүнө алат. Ар бир түс Абдраман атанын балдарынан тараган өзүнчө үй-бүлө бутагын билдирет.</p>
+                    <div class="goal-color-block">
+                        <h4 class="goal-color-title">Санжырадагы түстөр жөнүндө</h4>
+                        <p>Бул сайтта Абдраман атанын урпактары ар бир үй-бүлө бутагы боюнча өзүнчө түс менен көрсөтүлгөн. Ар бир түс белгилүү бир баладан тараган урпактарды билдирет. Бул ыкма аркылуу колдонуучулар санжыраны караганда кайсы адам кайсы бутакка таандык экенин оңой түшүнө алышат.</p>
+                        <p>Ар бир түс жөн эле дизайн үчүн эмес. Ал Абдраман атанын ар бир баласынан тараган өзүнчө үй-бүлө бутагын айырмалоо үчүн колдонулат. Ошондуктан санжыраны карап жатканда бир түстөгү адамдар бир атадан тараганын билдирет.</p>
+                        <p>Бул система санжыраны окууну жеңилдетет жана чоң үй-бүлөнүн түзүлүшүн түшүнүүгө жардам берет.</p>
+                        <ul class="branch-color-list">
+                            <li><span class="branch-color-dot" style="--dot-color:#3b82f6;"></span>Алайчы бутагы</li>
+                            <li><span class="branch-color-dot" style="--dot-color:#ef4444;"></span>Бүайша бутагы</li>
+                            <li><span class="branch-color-dot" style="--dot-color:#22c55e;"></span>Асилбек бутагы</li>
+                            <li><span class="branch-color-dot" style="--dot-color:#ec4899;"></span>Асилбү бутагы</li>
+                            <li><span class="branch-color-dot" style="--dot-color:#8b5cf6;"></span>Чынара бутагы</li>
+                            <li><span class="branch-color-dot" style="--dot-color:#eab308;"></span>Чолпонбай бутагы</li>
+                            <li><span class="branch-color-dot" style="--dot-color:#14b8a6;"></span>Элмира бутагы</li>
+                            <li><span class="branch-color-dot" style="--dot-color:#38bdf8;"></span>Максат бутагы</li>
+                            <li><span class="branch-color-dot" style="--dot-color:#e5e7eb;"></span>Суйорбек бутагы</li>
+                            <li><span class="branch-color-dot" style="--dot-color:#92400e;"></span>Анарбек бутагы</li>
+                        </ul>
+                    </div>
+                </section>
+                <section id="sidebar-section-share" class="sidebar-section">
+                    <h3>Бөлүшүү</h3>
+                    <p>Бул сайтты туугандарыңызга жөнөтө аласыз.</p>
+                    <div class="share-buttons">
+                        <a id="share-whatsapp" class="sidebar-link-btn" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i>WhatsApp</a>
+                        <a id="share-instagram" class="sidebar-link-btn" target="_blank" rel="noopener"><i class="fa-brands fa-instagram"></i>Instagram</a>
+                        <a id="share-telegram" class="sidebar-link-btn" target="_blank" rel="noopener"><i class="fa-brands fa-telegram"></i>Telegram</a>
+                        <button class="sidebar-link-btn" onclick="copySiteLink()"><i class="fa-solid fa-link"></i>Ссылка көчүрүү</button>
+                    </div>
+                </section>
+                <section id="sidebar-section-contact" class="sidebar-section">
+                    <h3>Байланыш</h3>
+                    <p>Суроолор же сунуштар болсо, WhatsApp же Telegram аркылуу жаза аласыз.</p>
+                    <div class="contact-buttons">
+                        <a id="contact-whatsapp" class="sidebar-link-btn" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i>WhatsApp</a>
+                        <a id="contact-telegram" class="sidebar-link-btn" target="_blank" rel="noopener"><i class="fa-brands fa-telegram"></i>Telegram</a>
+                        <button class="sidebar-link-btn" onclick="adminSignIn()"><i class="fa-solid fa-user"></i>Админ</button>
+                    </div>
+                    <div id="admin-auth-block"></div>
+                    <div id="admin-user-line" class="admin-user-line"></div>
+                    <div id="pending-list" class="pending-list"></div>
+                    <button id="admin-logout-btn" class="btn-save bg-gray-600 text-white" onclick="adminSignOut()">Чыгуу</button>
+                </section>
+            </div>
+        </aside>
+    </div>
+
+    <div id="modal-overlay" onclick="if(event.target === this) closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h2 id="member-modal-title" class="text-lg font-bold mb-3 text-center text-white">Добавить человека</h2>
+            <input type="text" id="new-name" placeholder="Имя">
+            <input type="text" id="new-date" placeholder="Дата рождения" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+            <div class="gender-label">Пол</div>
+            <select id="new-gender" class="gender-select">
+                <option value="male">эркек</option>
+                <option value="female">аял</option>
+            </select>
+            <div id="member-bio-group" class="member-bio-group">
+                <div class="gender-label">Өмүр баяны</div>
+                <textarea id="new-bio" class="member-bio-input" placeholder="Өмүр баян ушул жерге жазылат"></textarea>
+            </div>
+            <div class="flex gap-2">
+                <button id="member-modal-save-btn" class="btn-save" onclick="saveMemberAction()">Сактоо</button>
+                <button class="btn-save bg-gray-600 text-white" onclick="closeModal()">Жок</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-pass-overlay" onclick="if(event.target === this) closeAdminPasswordModal(false)">
+        <div class="admin-pass-modal" onclick="event.stopPropagation()">
+            <h2 class="admin-pass-title">Админ кирүү</h2>
+            <p class="admin-pass-text">Админ болуп кирүү үчүн пароль жазыңыз:</p>
+            <input type="password" id="admin-password-input" placeholder="Пароль">
+            <div class="admin-pass-actions">
+                <button class="btn-save" onclick="submitAdminPassword()">Улантуу</button>
+                <button class="btn-save bg-gray-600 text-white" onclick="closeAdminPasswordModal(false)">Жокко чыгаруу</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="bio-overlay" onclick="if(event.target === this) closeBioModal()">
+        <div class="bio-modal" onclick="event.stopPropagation()">
+            <div class="bio-modal-head">
+                <h2 id="bio-modal-title" class="bio-title">Абдраман</h2>
+                <button class="bio-close" onclick="closeBioModal()" aria-label="Жабуу">&times;</button>
+                <div id="bio-modal-subtitle" class="bio-subtitle"></div>
+            </div>
+            <div class="bio-modal-body">
+                <img id="bio-modal-photo" class="bio-photo" src="" alt="">
+                <div class="bio-section-title">Өмүр баяны</div>
+                <div id="bio-modal-structured" class="biography-section" aria-live="polite"></div>
+                <p id="bio-modal-text" class="bio-text"></p>
+                <div id="bio-modal-ancestors" class="bio-ancestors"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tree-container" translate="no">
+        <svg id="tree-svg" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; overflow: visible;"></svg>
+        <div id="nodes-layer"></div>
+    </div>
+    <div id="notice-host" aria-live="polite" aria-atomic="true"></div>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+    <script src="app-config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
