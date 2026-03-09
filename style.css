@@ -58,8 +58,8 @@ body, html {
     left: 12px;
     top: 50%;
     transform: translateY(-50%);
-    width: 16px;
-    height: 16px;
+    width: 24px;
+    height: 24px;
     pointer-events: none;
 }
 
@@ -69,7 +69,7 @@ body, html {
     color: white;
     border: 1px solid rgba(201, 169, 106, 0.72);
     border-radius: 18px;
-    padding: 12px 16px 12px 40px;
+    padding: 12px 16px 12px 46px;
     font-size: 16px;
     min-height: 46px;
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -158,6 +158,11 @@ body, html {
 
 #top-search-bar.is-open .search-panel-actions {
     display: flex;
+}
+
+#top-search-bar.is-open .search-icon {
+    width: 18px;
+    height: 18px;
 }
 
 #top-search-bar.is-open .search-results {
@@ -710,6 +715,46 @@ body, html {
     justify-content: center;
     color: var(--accent-gold);
     font-size: 0.78rem;
+    cursor: pointer;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    backdrop-filter: blur(5px);
+}
+
+#share-btn {
+    position: fixed;
+    bottom: 18px;
+    right: 94px;
+    width: 30px;
+    height: 30px;
+    background: var(--node-bg);
+    border: 1px solid var(--accent-gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-gold);
+    font-size: 0.72rem;
+    cursor: pointer;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    backdrop-filter: blur(5px);
+}
+
+#share-btn {
+    position: fixed;
+    bottom: 18px;
+    right: 94px;
+    width: 30px;
+    height: 30px;
+    background: var(--node-bg);
+    border: 1px solid var(--accent-gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-gold);
+    font-size: 0.72rem;
     cursor: pointer;
     z-index: 100;
     box-shadow: 0 4px 20px rgba(0,0,0,0.6);
@@ -1582,7 +1627,7 @@ textarea:focus { border-color: var(--accent-gold); }
     }
 
     .search-bar {
-        padding: 12px 16px 12px 40px;
+        padding: 12px 16px 12px 46px;
         border-radius: 12px;
         font-size: 0.95rem;
     }
@@ -1827,7 +1872,8 @@ textarea:focus { border-color: var(--accent-gold); }
     }
 
     #home-btn,
-    #reset-tree-btn {
+    #reset-tree-btn,
+    #share-btn {
         width: 30px;
         height: 30px;
         bottom: 14px;
@@ -1840,6 +1886,10 @@ textarea:focus { border-color: var(--accent-gold); }
 
     #reset-tree-btn {
         right: 50px;
+    }
+
+    #share-btn {
+        right: 86px;
     }
 }
 @media (max-width: 768px) {

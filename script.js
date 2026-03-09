@@ -83,6 +83,8 @@ const SIDEBAR_SECTIONS = ["goal", "share", "contact"];
 const SHARE_INSTAGRAM_URL = "https://instagram.com";
 const CONTACT_WHATSAPP_URL = "https://wa.me/79613745333";
 const CONTACT_TELEGRAM_URL = "https://t.me/Abdyramanov";
+const SITE_SHARE_TITLE = "Абдраман атанын санжырасы";
+const SITE_SHARE_TEXT = "Абдраман санжыра";
 const BRANCH_COLORS_BY_ROOT_CHILD_ID = {
     al: "#3b82f6",
     bu: "#ef4444",
@@ -465,6 +467,11 @@ async function copySiteLink() {
     }
 }
 
+function quickShareSite() {
+    openSidebar();
+    openSidebarSection("share");
+}
+
 function initSidebarContent() {
     const ancestryHost = document.getElementById("sidebar-ancestry-text");
     if (ancestryHost) {
@@ -475,7 +482,7 @@ function initSidebarContent() {
     }
 
     const siteUrl = window.location.href;
-    const shareText = "Абдраман санжыра";
+    const shareText = SITE_SHARE_TEXT;
     const shareWhatsappUrl = `https://wa.me/?text=${encodeURIComponent(`${shareText} ${siteUrl}`)}`;
     const shareTelegramUrl = `https://t.me/share/url?url=${encodeURIComponent(siteUrl)}&text=${encodeURIComponent(shareText)}`;
 
@@ -1550,6 +1557,7 @@ document.addEventListener("mousedown", (e) => {
         && !e.target.closest("#home-btn")
         && !e.target.closest("#admin-btn")
         && !e.target.closest("#reset-tree-btn")
+        && !e.target.closest("#share-btn")
         && !e.target.closest("#admin-panel")
         && !isUiOverlayTarget(e.target)) {
         handleDown(e.clientX, e.clientY);
@@ -1575,6 +1583,7 @@ document.addEventListener("touchstart", (e) => {
         && !e.target.closest(".node-container")
         && !e.target.closest("#admin-panel")
         && !e.target.closest("#reset-tree-btn")
+        && !e.target.closest("#share-btn")
         && !isUiOverlayTarget(e.target)) {
         handleDown(e.touches[0].clientX, e.touches[0].clientY);
     }
@@ -1750,5 +1759,6 @@ window.saveMemberAction = saveMemberAction;
 window.openBioModal = openBioModal;
 window.closeBioModal = closeBioModal;
 window.resetTree = resetTree;
+window.quickShareSite = quickShareSite;
 window.closeSearchPanel = closeSearchPanel;
 window.selectSearchResult = selectSearchResult;
