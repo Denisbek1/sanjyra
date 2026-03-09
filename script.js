@@ -85,6 +85,7 @@ const CONTACT_WHATSAPP_URL = "https://wa.me/79613745333";
 const CONTACT_TELEGRAM_URL = "https://t.me/Abdyramanov";
 const SITE_SHARE_TITLE = "Абдраман атанын санжырасы";
 const SITE_SHARE_TEXT = "Абдраман санжыра";
+const SITE_SHARE_URL = "https://abdramanov.netlify.app/?v=20260310c";
 const BRANCH_COLORS_BY_ROOT_CHILD_ID = {
     al: "#3b82f6",
     bu: "#ef4444",
@@ -460,7 +461,7 @@ function openSidebarSection(section) {
 
 async function copySiteLink() {
     try {
-        await navigator.clipboard.writeText(window.location.href);
+        await navigator.clipboard.writeText(SITE_SHARE_URL);
         showNotice("Ссылка көчүрүлдү");
     } catch (error) {
         showNotice("Ссылка көчүрүү мүмкүн болгон жок.", "error");
@@ -481,7 +482,7 @@ function initSidebarContent() {
         `;
     }
 
-    const siteUrl = window.location.href;
+    const siteUrl = SITE_SHARE_URL;
     const shareText = SITE_SHARE_TEXT;
     const shareWhatsappUrl = `https://wa.me/?text=${encodeURIComponent(`${shareText} ${siteUrl}`)}`;
     const shareTelegramUrl = `https://t.me/share/url?url=${encodeURIComponent(siteUrl)}&text=${encodeURIComponent(shareText)}`;
