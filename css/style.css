@@ -5,7 +5,7 @@
     --node-bg: rgba(28, 33, 40, 0.9);
     --accent-gold: #c5a059;
     --line-color: #c5a059;
-    --site-bg-image: url("../assets/fon.png");
+    --site-bg-image: url("../assets/fon.webp");
     --card-width-non-root-desktop: 230px;
     --card-width-non-root-mobile: 170px;
 }

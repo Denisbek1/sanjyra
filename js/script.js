@@ -76,9 +76,10 @@ const seedData = [
     { id: "an6", name: "Сауле", bdate: "2009", parentId: "an", expanded: false }
 ];
 
-const rootPhoto = "assets/abdraman.jpeg";
-const malePhoto = "assets/kalpak.jpeg";
-const femalePhoto = "assets/yal.jpeg";
+// images optimized to WebP for faster loading
+const rootPhoto = "assets/abdraman.webp";
+const malePhoto = "assets/kalpak.webp";
+const femalePhoto = "assets/yal.webp";
 const SIDEBAR_SECTIONS = ["goal", "share", "contact"];
 const SHARE_INSTAGRAM_URL = "https://instagram.com";
 const CONTACT_WHATSAPP_URL = "https://wa.me/79613745333";
@@ -1539,7 +1540,7 @@ function render() {
             ancestryEl.innerHTML = ancestryExpanded ? `
                 <div class="ancestry-shell">
                     <div class="ancestry-head">
-                        <div class="ancestry-head-icon"><img src="assets/atatek.png" alt="Ата-тек" loading="lazy"></div>
+                        <div class="ancestry-head-icon"><img src="assets/atatek.webp" alt="Ата-тек" loading="lazy"></div>
                         <div class="ancestry-head-copy">
                             <div class="ancestry-head-title">Ата-тек жөнүндө</div>
                             <div class="ancestry-head-sub">Негизги муундардын тарыхы</div>
@@ -1558,7 +1559,7 @@ function render() {
             ` : `
                 <div class="ancestry-shell">
                     <div class="ancestry-head">
-                        <div class="ancestry-head-icon"><img src="assets/atatek.png" alt="Ата-тек" loading="lazy"></div>
+                        <div class="ancestry-head-icon"><img src="assets/atatek.webp" alt="Ата-тек" loading="lazy"></div>
                         <div class="ancestry-head-copy">
                             <div class="ancestry-head-title">Ата-тек</div>
                             <div class="ancestry-head-sub">Кеңири көрүү үчүн басыңыз</div>
