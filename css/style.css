@@ -1926,12 +1926,6 @@ textarea:focus { border-color: var(--accent-gold); }
     flex-wrap: nowrap;
 }
 
-.site-icon {
-    width: 18px;
-    height: 18px;
-    flex: 0 0 18px;
-}
-
 .site-link a {
     white-space: nowrap;
 }

@@ -206,6 +206,7 @@ let treeCenteredReady = false;
 let firstConnectionsDrawDone = false;
 let loaderRenderDone = false;
 let loaderConnectionsDone = false;
+const nodeZoomMemory = new Map();
 const LOADER_MIN_VISIBLE_MS = 3000;
 const LOADER_MAX_WAIT_MS = 10000;
 const IMAGE_PLACEHOLDER_SRC = "data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA=";
@@ -574,6 +575,11 @@ function bindStaticUiEvents() {
 
     const bioCloseBtn = document.getElementById("bio-close-btn");
     if (bioCloseBtn) bioCloseBtn.addEventListener("click", closeBioModal);
+
+    const nodesLayer = document.getElementById("nodes-layer");
+    if (nodesLayer) {
+        nodesLayer.addEventListener("click", handleTreeCardClick);
+    }
 }
 
 function getViewportTargetCenter() {
@@ -1168,6 +1174,65 @@ function hasChildren(id) {
     return familyData.some((n) => n.parentId === id);
 }
 
+function toggleNodeBranch(node, searchContext) {
+    if (!node || searchContext) return;
+    if (!hasChildren(node.id)) return;
+
+    const nextExpanded = !node.expanded;
+    node.expanded = nextExpanded;
+
+    if (nextExpanded) {
+        nodeZoomMemory.set(node.id, scale);
+        render();
+        requestAnimationFrame(() => {
+            const firstChild = familyData.find((child) => child.parentId === node.id);
+            if (!firstChild) return;
+            const maxScale = window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT ? 2.2 : 3;
+            const zoomedScale = Math.min(Math.max(scale * 1.18, 0.1), maxScale);
+            scale = zoomedScale;
+            centerViewOnNode(firstChild, {
+                animate: true,
+                duration: 460
+            });
+        });
+    } else {
+        render();
+        requestAnimationFrame(() => {
+            const savedScale = nodeZoomMemory.get(node.id);
+            if (typeof savedScale === "number" && Number.isFinite(savedScale)) {
+                const maxScale = window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT ? 2.2 : 3;
+                scale = Math.min(Math.max(savedScale, 0.1), maxScale);
+            }
+            nodeZoomMemory.delete(node.id);
+            centerViewOnNode(node, {
+                animate: true,
+                duration: 460
+            });
+        });
+    }
+
+    if (!backendEnabled) persistApprovedLocal();
+}
+
+function handleTreeCardClick(event) {
+    const target = event.target;
+    if (!target || typeof target.closest !== "function") return;
+
+    // Keep card controls independent from expand/collapse.
+    if (target.closest(".add-plus-inline, .bio-btn-inline, .node-icon-btn")) return;
+
+    const card = target.closest(".node-container.person-card[data-node-id]");
+    if (!card) return;
+
+    const nodeId = card.dataset.nodeId;
+    if (!nodeId) return;
+    const node = familyData.find((item) => item.id === nodeId);
+    if (!node) return;
+
+    const searchContext = buildSearchContext();
+    toggleNodeBranch(node, searchContext);
+}
+
 function canAddToNode(node) {
     if (!node) return false;
     if (node.id === "root") return false;
@@ -1351,7 +1416,6 @@ function drawConnections() {
         const id = el.dataset.nodeId;
         if (id) nodeElementMap.set(id, el);
     });
-
     familyData.forEach((node) => {
         if (!isVisible(node, searchContext)) return;
         if (!node.parentId) return;
@@ -1403,14 +1467,12 @@ function render() {
     if (!nodesLayer || !svg) return;
     nodesLayer.innerHTML = "";
     svg.innerHTML = "";
-
     familyData.forEach((n) => {
         if (!isVisible(n, searchContext)) return;
 
         const isRootCard = n.id === "root";
         const isRootChild = n.parentId === "root";
         const isCompactDescendant = !isRootCard && !isRootChild;
-
         const el = document.createElement("div");
         el.className = `node-container person-card ${isRootCard ? "node-root" : ""} ${isRootChild ? "node-root-child" : ""} ${isCompactDescendant ? "node-compact-descendant" : ""} ${isNodeExpanded(n, searchContext) ? "is-expanded" : ""}`;
         el.style.left = n.x + "px";
@@ -1500,22 +1562,6 @@ function render() {
                 });
             }
         }
-
-        el.onclick = () => {
-            if (searchContext) return;
-            if (hasChildren(n.id)) {
-                const nextExpanded = !n.expanded;
-                n.expanded = nextExpanded;
-                render();
-                if (nextExpanded) {
-                    centerViewOnExpandedChildren(n, {
-                        animate: true,
-                        duration: 460
-                    });
-                }
-                if (!backendEnabled) persistApprovedLocal();
-            }
-        };
 
         nodesLayer.appendChild(el);
 
