@@ -414,6 +414,65 @@ function centerViewOnNode(node, options = {}) {
     }
 }
 
+function centerViewOnExpandedChildren(node, options = {}) {
+    if (!node) return;
+    const {
+        animate = false,
+        duration = VIEWPORT_ANIMATION_MS
+    } = options;
+
+    const directChildren = getTreeChildren(node.id, null);
+    if (!directChildren.length) {
+        centerViewOnNode(node, { animate, duration });
+        return;
+    }
+
+    const nodesToFit = [node, ...directChildren];
+    let left = Infinity;
+    let right = -Infinity;
+    let top = Infinity;
+    let bottom = -Infinity;
+
+    nodesToFit.forEach((item) => {
+        const x = item.x || 0;
+        const y = item.y || 0;
+        left = Math.min(left, x);
+        right = Math.max(right, x + getNodeWidth(item));
+        top = Math.min(top, y);
+        bottom = Math.max(bottom, y + getNodeHeight(item));
+    });
+
+    const topInset = getSearchPanelHeight();
+    const horizontalPadding = isMobileLayout() ? 18 : 42;
+    const verticalPaddingTop = isMobileLayout() ? 14 : 24;
+    const verticalPaddingBottom = isMobileLayout() ? 24 : 34;
+    const viewportWidth = Math.max(80, window.innerWidth - (horizontalPadding * 2));
+    const viewportHeight = Math.max(80, window.innerHeight - topInset - verticalPaddingTop - verticalPaddingBottom);
+    const targetBranchWidth = Math.max(1, right - left);
+    const targetBranchHeight = Math.max(1, bottom - top);
+    const maxScale = window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT ? 2.2 : 3;
+    const fitScale = Math.min(viewportWidth / targetBranchWidth, viewportHeight / targetBranchHeight);
+
+    scale = Math.min(Math.max(Math.min(scale, fitScale), 0.1), maxScale);
+
+    const branchCenterX = left + (targetBranchWidth / 2);
+    const branchCenterY = top + (targetBranchHeight / 2);
+    const viewportCenterX = window.innerWidth / 2;
+    const viewportCenterY = topInset + ((window.innerHeight - topInset) / 2);
+
+    clearTimeout(viewportAnimationTimer);
+    setViewportTransition(animate ? duration : 0);
+    posX = Math.round(viewportCenterX - (branchCenterX * scale));
+    posY = Math.round(viewportCenterY - (branchCenterY * scale));
+    updateTransform();
+
+    if (animate) {
+        viewportAnimationTimer = setTimeout(() => {
+            setViewportTransition(0);
+        }, duration);
+    }
+}
+
 function focusInitialNode() {
     const targetNode = familyData.find((node) => node.name === "Абдраман") || familyData.find((node) => node.id === "root");
     if (!targetNode) return;
@@ -1120,13 +1179,12 @@ function render() {
             if (searchContext) return;
             if (hasChildren(n.id)) {
                 const nextExpanded = !n.expanded;
-                n.expanded = !n.expanded;
+                n.expanded = nextExpanded;
                 render();
                 if (nextExpanded) {
-                    centerViewOnNode(n, {
+                    centerViewOnExpandedChildren(n, {
                         animate: true,
-                        duration: 460,
-                        horizontalBias: isMobileLayout() ? -0.08 : -0.16
+                        duration: 460
                     });
                 }
                 if (!backendEnabled) persistApprovedLocal();
