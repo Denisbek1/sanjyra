@@ -207,7 +207,7 @@ let firstConnectionsDrawDone = false;
 let loaderRenderDone = false;
 let loaderConnectionsDone = false;
 const nodeZoomMemory = new Map();
-let lastCardTouchAt = 0;
+let cardTouchStart = null;
 const LOADER_MIN_VISIBLE_MS = 3000;
 const LOADER_MAX_WAIT_MS = 10000;
 const IMAGE_PLACEHOLDER_SRC = "data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA=";
@@ -235,22 +235,65 @@ const FULL_LINEAGE_MODAL_HTML = `
         </p>
     </div>
     <div class="lineage-modal-block">
-        <h4 class="bio-block-title">Биздин ата-бабалар</h4>
-        <div class="lineage-chain">
-            <div class="lineage-chain-item"><span class="gold">Адыгине</span></div>
-            <div class="lineage-chain-arrow">↓ <span class="gold">Кенчим</span></div>
-            <div class="lineage-chain-arrow">↓ <span class="gold">Жакшылык</span></div>
-            <div class="lineage-chain-arrow">↓ <span class="gold">Токобай</span></div>
-            <div class="lineage-chain-arrow">↓ <span class="gold">Карагене</span></div>
-            <div class="lineage-chain-arrow">↓ <span class="gold">Өмүрзак</span></div>
-            <div class="lineage-chain-arrow">↓ <span class="gold">Мамбет</span></div>
-            <div class="lineage-chain-arrow">↓ <span class="gold">Нурбай</span></div>
-            <div class="lineage-chain-arrow">↓ <span class="gold">Дүйшөбай</span></div>
-            <div class="lineage-chain-arrow">↓ <span class="gold">Кул</span></div>
-            <div class="lineage-chain-arrow">↓ <span class="gold">Абдраман</span></div>
+        <div class="lineage-wrapper">
+            <h3 class="lineage-title">Биздин ата-бабалар</h3>
+            <div class="lineage-tree">
+                <div class="lineage-line"></div>
+                <div id="lineage-container"></div>
+            </div>
         </div>
     </div>
 `;
+
+const LINEAGE_TIMELINE_ANCESTORS = [
+    { name: "Адыгине", desc: "Уруунун түпкү атасы", highlight: true },
+    { name: "Кенчим" },
+    { name: "Жакшылык" },
+    { name: "Токобай" },
+    { name: "Карагене" },
+    { name: "Өмүрзак" },
+    { name: "Мамбет" },
+    { name: "Нурбай" },
+    { name: "Дүйшөбай" },
+    { name: "Кул" },
+    { name: "Абдраман", desc: "Биздин чоң атабыз", current: true }
+];
+
+function renderLineageTimeline() {
+    const container = document.getElementById("lineage-container");
+    if (!container) return;
+    container.innerHTML = "";
+
+    LINEAGE_TIMELINE_ANCESTORS.forEach((ancestor, index) => {
+        const item = document.createElement("div");
+        item.className = "timeline-item";
+
+        const dot = ancestor.current ? "node-dot node-current" : "node-dot";
+        const nameClass = ancestor.highlight || ancestor.current ? "gold" : "";
+        const description = ancestor.desc
+            ? `<div class="timeline-desc">${ancestor.desc}</div>`
+            : "";
+
+        item.innerHTML = `
+            <div class="timeline-item-shell">
+                <div class="${dot}">${index + 1}</div>
+                <div class="node-card">
+                    <div class="timeline-name ${nameClass}">${ancestor.name}</div>
+                    ${description}
+                </div>
+            </div>
+        `;
+
+        container.appendChild(item);
+    });
+
+    setTimeout(() => {
+        const items = container.querySelectorAll(".timeline-item");
+        items.forEach((element, index) => {
+            setTimeout(() => element.classList.add("visible"), index * 80);
+        });
+    }, 200);
+}
 
 const appConfig = window.APP_CONFIG || {};
 const adminUids = Array.isArray(appConfig.adminUids) ? appConfig.adminUids : [];
@@ -571,7 +614,7 @@ function bindStaticUiEvents() {
         });
     }
 
-    const bioModalShell = document.getElementById("bio-modal-shell");
+    const bioModalShell = document.getElementById("sanjyra-modal");
     if (bioModalShell) bioModalShell.addEventListener("click", (event) => event.stopPropagation());
 
     const bioCloseBtn = document.getElementById("bio-close-btn");
@@ -1550,17 +1593,41 @@ function render() {
         }
 
         el.onclick = (event) => {
-            if (Date.now() - lastCardTouchAt < 450) return;
             if (isCardControlTarget(event.target)) return;
             toggleNodeBranch(n, null);
         };
 
         el.addEventListener("touchend", (event) => {
             if (isCardControlTarget(event.target)) return;
-            event.preventDefault();
-            lastCardTouchAt = Date.now();
+            if (!cardTouchStart || cardTouchStart.nodeId !== n.id) return;
+            if (!event.changedTouches || event.changedTouches.length !== 1) {
+                cardTouchStart = null;
+                return;
+            }
+            const touch = event.changedTouches[0];
+            const dx = touch.clientX - cardTouchStart.x;
+            const dy = touch.clientY - cardTouchStart.y;
+            const distance = Math.hypot(dx, dy);
+            const elapsed = Date.now() - cardTouchStart.time;
+            cardTouchStart = null;
+            if (distance > 12 || elapsed > 450 || isPinching) return;
             toggleNodeBranch(n, null);
-        }, { passive: false });
+        }, { passive: true });
+
+        el.addEventListener("touchstart", (event) => {
+            if (isCardControlTarget(event.target)) return;
+            if (!event.touches || event.touches.length !== 1) {
+                cardTouchStart = null;
+                return;
+            }
+            const touch = event.touches[0];
+            cardTouchStart = {
+                nodeId: n.id,
+                x: touch.clientX,
+                y: touch.clientY,
+                time: Date.now()
+            };
+        }, { passive: true });
 
         nodesLayer.appendChild(el);
 
@@ -2136,7 +2203,7 @@ function openFullLineageModal() {
     const textEl = document.getElementById("bio-modal-text");
     const ancestorsEl = document.getElementById("bio-modal-ancestors");
     const structuredEl = document.getElementById("bio-modal-structured");
-    const sectionTitleEl = document.querySelector("#bio-modal-shell .bio-section-title");
+    const sectionTitleEl = document.querySelector("#sanjyra-modal .bio-section-title");
     if (!modal || !titleEl || !subtitleEl || !photoEl || !textEl || !ancestorsEl || !structuredEl || !sectionTitleEl) return;
 
     titleEl.textContent = "Кыргыз санжырасы";
@@ -2148,6 +2215,7 @@ function openFullLineageModal() {
     ancestorsEl.style.display = "none";
     ancestorsEl.textContent = "";
     structuredEl.innerHTML = FULL_LINEAGE_MODAL_HTML;
+    renderLineageTimeline();
     structuredEl.style.display = "block";
     modal.style.display = "flex";
 }
@@ -2162,7 +2230,7 @@ function openBioModal(memberId) {
     const subtitleEl = document.getElementById("bio-modal-subtitle");
     const textEl = document.getElementById("bio-modal-text");
     const ancestors = document.getElementById("bio-modal-ancestors");
-    const sectionTitleEl = document.querySelector("#bio-modal-shell .bio-section-title");
+    const sectionTitleEl = document.querySelector("#sanjyra-modal .bio-section-title");
     if (!photoEl || !subtitleEl || !textEl || !ancestors || !sectionTitleEl) return;
 
     const photo = node.id === "root"
