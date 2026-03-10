@@ -207,6 +207,7 @@ let firstConnectionsDrawDone = false;
 let loaderRenderDone = false;
 let loaderConnectionsDone = false;
 const nodeZoomMemory = new Map();
+let lastCardTouchAt = 0;
 const LOADER_MIN_VISIBLE_MS = 3000;
 const LOADER_MAX_WAIT_MS = 10000;
 const IMAGE_PLACEHOLDER_SRC = "data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA=";
@@ -576,10 +577,6 @@ function bindStaticUiEvents() {
     const bioCloseBtn = document.getElementById("bio-close-btn");
     if (bioCloseBtn) bioCloseBtn.addEventListener("click", closeBioModal);
 
-    const nodesLayer = document.getElementById("nodes-layer");
-    if (nodesLayer) {
-        nodesLayer.addEventListener("click", handleTreeCardClick);
-    }
 }
 
 function getViewportTargetCenter() {
@@ -1214,23 +1211,12 @@ function toggleNodeBranch(node, searchContext) {
     if (!backendEnabled) persistApprovedLocal();
 }
 
-function handleTreeCardClick(event) {
-    const target = event.target;
-    if (!target || typeof target.closest !== "function") return;
-
-    // Keep card controls independent from expand/collapse.
-    if (target.closest(".add-plus-inline, .bio-btn-inline, .node-icon-btn")) return;
-
-    const card = target.closest(".node-container.person-card[data-node-id]");
-    if (!card) return;
-
-    const nodeId = card.dataset.nodeId;
-    if (!nodeId) return;
-    const node = familyData.find((item) => item.id === nodeId);
-    if (!node) return;
-
-    const searchContext = buildSearchContext();
-    toggleNodeBranch(node, searchContext);
+function isCardControlTarget(rawTarget) {
+    const target = rawTarget && rawTarget.nodeType === 1
+        ? rawTarget
+        : (rawTarget && rawTarget.parentElement ? rawTarget.parentElement : null);
+    if (!target || typeof target.closest !== "function") return false;
+    return Boolean(target.closest(".add-plus-inline, .bio-btn-inline, .node-icon-btn"));
 }
 
 function canAddToNode(node) {
@@ -1562,6 +1548,19 @@ function render() {
                 });
             }
         }
+
+        el.onclick = (event) => {
+            if (Date.now() - lastCardTouchAt < 450) return;
+            if (isCardControlTarget(event.target)) return;
+            toggleNodeBranch(n, null);
+        };
+
+        el.addEventListener("touchend", (event) => {
+            if (isCardControlTarget(event.target)) return;
+            event.preventDefault();
+            lastCardTouchAt = Date.now();
+            toggleNodeBranch(n, null);
+        }, { passive: false });
 
         nodesLayer.appendChild(el);
 
