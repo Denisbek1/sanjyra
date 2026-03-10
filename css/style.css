@@ -236,7 +236,13 @@ body.loading {
     position: absolute;
     width: 100%; height: 100%;
     transform-origin: 0 0;
+    transform: translateZ(0);
     cursor: grab;
+    will-change: transform;
+}
+
+.tree-container {
+    transform: translateZ(0);
     will-change: transform;
 }
 
@@ -559,10 +565,19 @@ body.loading {
 
 .bio-btn-inline {
     margin-top: 0;
-    font-size: 0.68rem;
-    padding: 1px 6px;
+    position: absolute;
+    left: 8px;
+    bottom: 6px;
+    z-index: 6;
+    font-size: 0.58rem;
+    line-height: 1.1;
+    padding: 1px 5px;
     align-self: flex-start;
     flex-shrink: 0;
+}
+
+.node-container.has-bio-button {
+    padding-bottom: 18px;
 }
 
 .bio-btn:hover {
@@ -1809,7 +1824,9 @@ textarea:focus { border-color: var(--accent-gold); }
     }
 
     .bio-btn-inline {
-        font-size: 0.52rem;
+        left: 7px;
+        bottom: 5px;
+        font-size: 0.5rem;
         padding: 1px 4px;
     }
 

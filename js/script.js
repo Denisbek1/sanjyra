@@ -200,6 +200,10 @@ let loaderProgress = 0;
 let loaderTargetProgress = 0;
 let loaderProgressTimer = null;
 let drawConnectionsRaf = null;
+let drawConnectionsTimer = null;
+let treeCardsReady = false;
+let treeCenteredReady = false;
+let firstConnectionsDrawDone = false;
 
 const appConfig = window.APP_CONFIG || {};
 const adminUids = Array.isArray(appConfig.adminUids) ? appConfig.adminUids : [];
@@ -259,6 +263,11 @@ function hideLoader() {
     if (document.body) {
         document.body.classList.remove("loading");
     }
+
+    // Draw connections only after loader is gone and layout is stable.
+    setTimeout(() => {
+        scheduleDrawConnections({ initial: true, immediate: true });
+    }, 420);
 }
 
 function tryHideLoader() {
@@ -668,10 +677,14 @@ function centerOnRootPerson(options = {}) {
             duration,
             allowZoomIn: !(typeof scaleOverride === "number" && Number.isFinite(scaleOverride))
         });
+        treeCenteredReady = true;
+        scheduleDrawConnections({ initial: !firstConnectionsDrawDone });
         return;
     }
 
     centerViewOnNode(rootNode, { animate, duration });
+    treeCenteredReady = true;
+    scheduleDrawConnections({ initial: !firstConnectionsDrawDone });
 }
 
 function focusInitialNode() {
@@ -1286,7 +1299,20 @@ function getEdgeSourceY(parentNode, childNodeId, searchContext) {
     return start + step * index;
 }
 
-function scheduleDrawConnections() {
+function debounce(fn, delay) {
+    let t = null;
+    return (...args) => {
+        if (t) clearTimeout(t);
+        t = setTimeout(() => fn(...args), delay);
+    };
+}
+
+function canDrawConnections() {
+    return treeCardsReady && treeCenteredReady && loaderHidden;
+}
+
+function runDrawConnectionsFrame() {
+    if (!canDrawConnections()) return;
     if (drawConnectionsRaf) {
         cancelAnimationFrame(drawConnectionsRaf);
     }
@@ -1294,6 +1320,32 @@ function scheduleDrawConnections() {
         drawConnectionsRaf = null;
         drawConnections();
     });
+}
+
+const redrawConnections = debounce(() => {
+    runDrawConnectionsFrame();
+}, 60);
+
+function scheduleDrawConnections(options = {}) {
+    const { initial = false, immediate = false } = options;
+    if (!canDrawConnections()) return;
+
+    if (initial && !firstConnectionsDrawDone) {
+        if (drawConnectionsTimer) clearTimeout(drawConnectionsTimer);
+        drawConnectionsTimer = setTimeout(() => {
+            drawConnectionsTimer = null;
+            firstConnectionsDrawDone = true;
+            runDrawConnectionsFrame();
+        }, 50);
+        return;
+    }
+
+    if (immediate) {
+        runDrawConnectionsFrame();
+        return;
+    }
+
+    redrawConnections();
 }
 
 function drawConnections() {
@@ -1344,6 +1396,7 @@ function render() {
     const searchContext = buildSearchContext();
     const { nodeWidth, ancestryGap } = getTreeMetrics();
     layout("root", 0, 0, searchContext);
+    treeCardsReady = false;
     const nodesLayer = document.getElementById("nodes-layer");
     const svg = document.getElementById("tree-svg");
     if (!nodesLayer || !svg) return;
@@ -1405,6 +1458,7 @@ function render() {
         const lifeStoryBtn = canShowLifeStory(n)
             ? `<button class="bio-btn bio-btn-inline" onclick="event.stopPropagation(); openBioModal('${n.id}')">Өмүр баяны</button>`
             : "";
+        const hasLifeStoryButton = Boolean(lifeStoryBtn);
         const metaActionBtn = isCompactDescendant ? addButton : (lifeStoryBtn || addButton);
         const metaContent = isRootCard
             ? `
@@ -1441,6 +1495,9 @@ function render() {
             </div>
             ${sideActions}
         `;
+        if (hasLifeStoryButton) {
+            el.classList.add("has-bio-button");
+        }
 
         if (n.id === "root") {
             const rootAvatar = el.querySelector(".profile-img");
@@ -1519,8 +1576,9 @@ function render() {
 
     });
 
+    treeCardsReady = true;
     updateTransform();
-    scheduleDrawConnections();
+    scheduleDrawConnections({ initial: !firstConnectionsDrawDone });
     renderSearchResults();
 }
 
@@ -1569,7 +1627,7 @@ function resetTree() {
 function updateTransform() {
     const treeContainer = document.getElementById("tree-container");
     if (!treeContainer) return;
-    treeContainer.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+    treeContainer.style.transform = `translate3d(${posX}px, ${posY}px, 0) scale(${scale})`;
     scheduleDrawConnections();
 }
 
