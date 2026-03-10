@@ -774,44 +774,27 @@ function getGenderPhoto(name) {
     return malePhoto;
 }
 
-function formatNameWithSuffix(name) {
-    const safeName = String(name || "").trim();
-    if (!safeName) return "Бул адамга";
-
-    const lower = safeName.toLowerCase();
-    const vowels = ["а", "е", "и", "о", "у", "ы", "ө", "ү", "э", "ё", "ю", "я"];
-    let lastVowel = "";
-
-    for (let i = lower.length - 1; i >= 0; i -= 1) {
-        const ch = lower[i];
-        if (vowels.includes(ch)) {
-            lastVowel = ch;
-            break;
-        }
-    }
-
-    if (["а", "о", "у", "ы"].includes(lastVowel)) return `${safeName}го`;
-    if (["ө", "ү"].includes(lastVowel)) return `${safeName}гө`;
-    if (["е", "и", "э", "ё"].includes(lastVowel)) return `${safeName}ге`;
-    return `${safeName}го`;
-}
-
 function openModal(parentId) {
     const parent = familyData.find((n) => n.id === parentId);
-    const parentName = formatNameWithSuffix(parent ? parent.name : "");
+    const parentName = parent ? String(parent.name || "").trim() : "";
     currentParentId = parentId;
     const overlay = document.getElementById("modal-overlay");
     const titleEl = document.getElementById("member-modal-title");
+    const parentNameEl = document.getElementById("member-modal-parent-name");
+    const confirmTextEl = document.getElementById("member-modal-confirm-text");
     const saveBtn = document.getElementById("member-modal-save-btn");
     const nameInput = document.getElementById("new-name");
     const dateInput = document.getElementById("new-date");
     const genderInput = document.getElementById("new-gender");
     const bioInput = document.getElementById("new-bio");
     const bioGroup = document.getElementById("member-bio-group");
-    if (!overlay || !titleEl || !saveBtn || !nameInput || !dateInput || !genderInput || !bioInput || !bioGroup) return;
+    if (!overlay || !titleEl || !parentNameEl || !confirmTextEl || !saveBtn || !nameInput || !dateInput || !genderInput || !bioInput || !bioGroup) return;
 
     overlay.style.display = "flex";
-    titleEl.textContent = `${parentName} кошосузбу?`;
+    titleEl.style.display = "none";
+    parentNameEl.style.display = "block";
+    confirmTextEl.style.display = "block";
+    parentNameEl.textContent = parentName || "Белгисиз";
     saveBtn.textContent = "Сактоо";
     memberModalMode = "add";
     editMemberId = null;
@@ -830,9 +813,16 @@ function closeModal() {
     const genderInput = document.getElementById("new-gender");
     const bioInput = document.getElementById("new-bio");
     const bioGroup = document.getElementById("member-bio-group");
-    if (!overlay || !nameInput || !dateInput || !genderInput || !bioInput || !bioGroup) return;
+    const titleEl = document.getElementById("member-modal-title");
+    const parentNameEl = document.getElementById("member-modal-parent-name");
+    const confirmTextEl = document.getElementById("member-modal-confirm-text");
+    if (!overlay || !nameInput || !dateInput || !genderInput || !bioInput || !bioGroup || !titleEl || !parentNameEl || !confirmTextEl) return;
 
     overlay.style.display = "none";
+    titleEl.style.display = "block";
+    parentNameEl.style.display = "none";
+    confirmTextEl.style.display = "none";
+    parentNameEl.textContent = "";
     nameInput.value = "";
     dateInput.value = "";
     genderInput.value = "male";
@@ -931,6 +921,8 @@ function openEditModal(memberId) {
     currentParentId = node.parentId;
 
     const titleEl = document.getElementById("member-modal-title");
+    const parentNameEl = document.getElementById("member-modal-parent-name");
+    const confirmTextEl = document.getElementById("member-modal-confirm-text");
     const saveBtn = document.getElementById("member-modal-save-btn");
     const nameInput = document.getElementById("new-name");
     const dateInput = document.getElementById("new-date");
@@ -938,8 +930,12 @@ function openEditModal(memberId) {
     const bioInput = document.getElementById("new-bio");
     const bioGroup = document.getElementById("member-bio-group");
     const overlay = document.getElementById("modal-overlay");
-    if (!titleEl || !saveBtn || !nameInput || !dateInput || !genderInput || !bioInput || !bioGroup || !overlay) return;
+    if (!titleEl || !parentNameEl || !confirmTextEl || !saveBtn || !nameInput || !dateInput || !genderInput || !bioInput || !bioGroup || !overlay) return;
 
+    titleEl.style.display = "block";
+    parentNameEl.style.display = "none";
+    confirmTextEl.style.display = "none";
+    parentNameEl.textContent = "";
     titleEl.textContent = "Адамды өзгөртүү";
     saveBtn.textContent = "Сактоо";
     nameInput.value = node.name || "";
