@@ -161,6 +161,8 @@ let startY;
 let isPinching = false;
 let pinchStartDistance = 0;
 let pinchStartScale = 1;
+let pinchStartPosX = 0;
+let pinchStartPosY = 0;
 let viewportAnimationTimer = null;
 const MOBILE_LAYOUT_BREAKPOINT = 768;
 const DESKTOP_HORIZONTAL_SPACING = 530;
@@ -1678,6 +1680,13 @@ function getTouchDistance(t1, t2) {
     return Math.hypot(dx, dy);
 }
 
+function getTouchMidpoint(t1, t2) {
+    return {
+        x: (t1.clientX + t2.clientX) / 2,
+        y: (t1.clientY + t2.clientY) / 2
+    };
+}
+
 const handleUp = () => {
     dragging = false;
 };
@@ -1714,12 +1723,15 @@ document.addEventListener("touchstart", (e) => {
     if (isUiOverlayTarget(e.target)) return;
 
     if (e.touches.length === 2) {
+        e.preventDefault();
         clearTimeout(viewportAnimationTimer);
         setViewportTransition(0);
         isPinching = true;
         dragging = false;
         pinchStartDistance = getTouchDistance(e.touches[0], e.touches[1]);
         pinchStartScale = scale;
+        pinchStartPosX = posX;
+        pinchStartPosY = posY;
         return;
     }
 
@@ -1736,10 +1748,19 @@ document.addEventListener("touchstart", (e) => {
 document.addEventListener("touchmove", (e) => {
     if (isPinching && e.touches.length === 2) {
         e.preventDefault();
-        const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
+        const touchA = e.touches[0];
+        const touchB = e.touches[1];
+        const currentDistance = getTouchDistance(touchA, touchB);
         if (pinchStartDistance > 0) {
             const maxScale = window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT ? 2.2 : 3;
-            scale = Math.min(Math.max(pinchStartScale * (currentDistance / pinchStartDistance), 0.1), maxScale);
+            const nextScale = Math.min(Math.max(pinchStartScale * (currentDistance / pinchStartDistance), 0.1), maxScale);
+            const midpoint = getTouchMidpoint(touchA, touchB);
+            const worldX = (midpoint.x - pinchStartPosX) / pinchStartScale;
+            const worldY = (midpoint.y - pinchStartPosY) / pinchStartScale;
+
+            scale = nextScale;
+            posX = midpoint.x - (worldX * scale);
+            posY = midpoint.y - (worldY * scale);
             updateTransform();
         }
         return;
@@ -1754,7 +1775,20 @@ document.addEventListener("touchend", (e) => {
     if (isPinching && e.touches.length < 2) {
         isPinching = false;
         pinchStartDistance = 0;
+        pinchStartScale = scale;
+        pinchStartPosX = posX;
+        pinchStartPosY = posY;
+
+        if (e.touches.length === 1 && !isUiOverlayTarget(e.target)) {
+            handleDown(e.touches[0].clientX, e.touches[0].clientY);
+            return;
+        }
     }
+    handleUp();
+});
+document.addEventListener("touchcancel", () => {
+    isPinching = false;
+    pinchStartDistance = 0;
     handleUp();
 });
 document.addEventListener("wheel", (e) => {
