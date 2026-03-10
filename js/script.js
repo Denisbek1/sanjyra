@@ -183,6 +183,7 @@ let isAdmin = false;
 let currentUser = null;
 
 let backendEnabled = false;
+let authEnabled = false;
 let db = null;
 let auth = null;
 let pendingUnsubscribe = null;
@@ -207,7 +208,7 @@ let firstConnectionsDrawDone = false;
 let loaderRenderDone = false;
 let loaderConnectionsDone = false;
 const nodeZoomMemory = new Map();
-let cardTouchStart = null;
+let lastCardTouchToggleAt = 0;
 const LOADER_MIN_VISIBLE_MS = 3000;
 const LOADER_MAX_WAIT_MS = 10000;
 const IMAGE_PLACEHOLDER_SRC = "data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA=";
@@ -619,6 +620,24 @@ function bindStaticUiEvents() {
 
     const bioCloseBtn = document.getElementById("bio-close-btn");
     if (bioCloseBtn) bioCloseBtn.addEventListener("click", closeBioModal);
+
+    const nodesLayer = document.getElementById("nodes-layer");
+    if (nodesLayer) {
+        nodesLayer.addEventListener("click", (event) => {
+            if (Date.now() - lastCardTouchToggleAt < 420) return;
+            handleCardToggleFromEventTarget(event.target);
+        });
+
+        nodesLayer.addEventListener("touchend", (event) => {
+            if (isPinching) return;
+            if (!event.changedTouches || event.changedTouches.length !== 1) return;
+            const toggled = handleCardToggleFromEventTarget(event.target);
+            if (toggled) {
+                lastCardTouchToggleAt = Date.now();
+                event.preventDefault();
+            }
+        }, { passive: false });
+    }
 
 }
 
@@ -1214,52 +1233,29 @@ function hasChildren(id) {
     return familyData.some((n) => n.parentId === id);
 }
 
-function toggleNodeBranch(node, searchContext) {
-    if (!node || searchContext) return;
-    if (!hasChildren(node.id)) return;
-
-    const nextExpanded = !node.expanded;
-    node.expanded = nextExpanded;
-
-    if (nextExpanded) {
-        nodeZoomMemory.set(node.id, scale);
-        render();
-        requestAnimationFrame(() => {
-            const firstChild = familyData.find((child) => child.parentId === node.id);
-            if (!firstChild) return;
-            const maxScale = window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT ? 2.2 : 3;
-            const zoomedScale = Math.min(Math.max(scale * 1.18, 0.1), maxScale);
-            scale = zoomedScale;
-            centerViewOnNode(firstChild, {
-                animate: true,
-                duration: 460
-            });
-        });
-    } else {
-        render();
-        requestAnimationFrame(() => {
-            const savedScale = nodeZoomMemory.get(node.id);
-            if (typeof savedScale === "number" && Number.isFinite(savedScale)) {
-                const maxScale = window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT ? 2.2 : 3;
-                scale = Math.min(Math.max(savedScale, 0.1), maxScale);
-            }
-            nodeZoomMemory.delete(node.id);
-            centerViewOnNode(node, {
-                animate: true,
-                duration: 460
-            });
-        });
-    }
-
-    if (!backendEnabled) persistApprovedLocal();
-}
-
 function isCardControlTarget(rawTarget) {
     const target = rawTarget && rawTarget.nodeType === 1
         ? rawTarget
         : (rawTarget && rawTarget.parentElement ? rawTarget.parentElement : null);
     if (!target || typeof target.closest !== "function") return false;
     return Boolean(target.closest(".add-plus-inline, .bio-btn-inline, .node-icon-btn"));
+}
+
+function handleCardToggleFromEventTarget(rawTarget) {
+    const target = rawTarget && rawTarget.nodeType === 1
+        ? rawTarget
+        : (rawTarget && rawTarget.parentElement ? rawTarget.parentElement : null);
+    if (!target || typeof target.closest !== "function") return false;
+    if (isUiOverlayTarget(target)) return false;
+    if (isCardControlTarget(target)) return false;
+
+    const card = target.closest("[data-node-id]");
+    if (!card) return false;
+    const nodeId = card.dataset.nodeId;
+    if (!nodeId) return false;
+
+    toggleBranch(nodeId);
+    return true;
 }
 
 function canAddToNode(node) {
@@ -1592,43 +1588,6 @@ function render() {
             }
         }
 
-        el.onclick = (event) => {
-            if (isCardControlTarget(event.target)) return;
-            toggleNodeBranch(n, null);
-        };
-
-        el.addEventListener("touchend", (event) => {
-            if (isCardControlTarget(event.target)) return;
-            if (!cardTouchStart || cardTouchStart.nodeId !== n.id) return;
-            if (!event.changedTouches || event.changedTouches.length !== 1) {
-                cardTouchStart = null;
-                return;
-            }
-            const touch = event.changedTouches[0];
-            const dx = touch.clientX - cardTouchStart.x;
-            const dy = touch.clientY - cardTouchStart.y;
-            const distance = Math.hypot(dx, dy);
-            const elapsed = Date.now() - cardTouchStart.time;
-            cardTouchStart = null;
-            if (distance > 12 || elapsed > 450 || isPinching) return;
-            toggleNodeBranch(n, null);
-        }, { passive: true });
-
-        el.addEventListener("touchstart", (event) => {
-            if (isCardControlTarget(event.target)) return;
-            if (!event.touches || event.touches.length !== 1) {
-                cardTouchStart = null;
-                return;
-            }
-            const touch = event.touches[0];
-            cardTouchStart = {
-                nodeId: n.id,
-                x: touch.clientX,
-                y: touch.clientY,
-                time: Date.now()
-            };
-        }, { passive: true });
-
         nodesLayer.appendChild(el);
 
         if (n.id === "root" && !searchContext) {
@@ -1731,12 +1690,12 @@ function updateAdminUi() {
     userLine.textContent = "";
     userLine.style.display = "none";
 
-    if (backendEnabled) {
+    if (backendEnabled || authEnabled) {
         if (currentUser) {
             authBlock.style.display = isAdmin ? "none" : "block";
             logoutBtn.style.display = "block";
-            pendingWrap.style.display = isAdmin ? "flex" : "none";
-            if (pendingTitle) pendingTitle.style.display = isAdmin ? "block" : "none";
+            pendingWrap.style.display = (isAdmin && backendEnabled) ? "flex" : "none";
+            if (pendingTitle) pendingTitle.style.display = (isAdmin && backendEnabled) ? "block" : "none";
         } else {
             authBlock.style.display = "block";
             logoutBtn.style.display = "none";
@@ -1784,7 +1743,7 @@ function renderPendingList(itemsFromBackend) {
 }
 
 async function adminSignIn() {
-    if (!backendEnabled || !auth) {
+    if (!authEnabled || !auth) {
         showNotice("Firebase Auth жеткиликсиз. Админ кирүү өчүрүлгөн.", "error");
         return;
     }
@@ -1824,7 +1783,7 @@ async function adminSignIn() {
 }
 
 async function adminSignOut() {
-    if (backendEnabled && auth && currentUser) {
+    if (authEnabled && auth && currentUser) {
         await auth.signOut();
         return;
     }
@@ -1952,6 +1911,9 @@ function startApprovedSubscription() {
 function initBackend() {
     if (!window.firebase || !appConfig.firebase) {
         backendEnabled = false;
+        authEnabled = false;
+        db = null;
+        auth = null;
         updateAdminUi();
         setLoaderProgress(100);
         loaderAuthReady = true;
@@ -1960,14 +1922,61 @@ function initBackend() {
         return;
     }
 
-    backendEnabled = true;
     setLoaderProgress(45);
-    const app = firebase.initializeApp(appConfig.firebase);
-    db = app.firestore();
-    auth = app.auth();
+    let app = null;
+    try {
+        if (Array.isArray(firebase.apps) && firebase.apps.length > 0) {
+            app = firebase.app();
+        } else {
+            app = firebase.initializeApp(appConfig.firebase);
+        }
+    } catch (error) {
+        backendEnabled = false;
+        authEnabled = false;
+        db = null;
+        auth = null;
+        setLoaderProgress(100);
+        loaderAuthReady = true;
+        loaderDataReady = true;
+        updateAdminUi();
+        tryHideLoader();
+        return;
+    }
+
+    try {
+        auth = app.auth();
+        authEnabled = Boolean(auth);
+    } catch (error) {
+        auth = null;
+        authEnabled = false;
+    }
+
+    try {
+        db = app.firestore();
+        backendEnabled = Boolean(db);
+    } catch (error) {
+        db = null;
+        backendEnabled = false;
+    }
+
     setLoaderProgress(60);
 
-    startApprovedSubscription();
+    if (backendEnabled) {
+        startApprovedSubscription();
+    } else {
+        loaderDataReady = true;
+    }
+
+    if (!authEnabled || !auth) {
+        loaderAuthReady = true;
+        currentUser = null;
+        isAdmin = false;
+        stopPendingSubscription();
+        renderPendingList([]);
+        updateAdminUi();
+        tryHideLoader();
+        return;
+    }
 
     auth.onAuthStateChanged((user) => {
         setLoaderProgress(80);
@@ -1985,7 +1994,7 @@ function initBackend() {
 
         if (adminUids.includes(user.uid)) {
             isAdmin = true;
-            startPendingSubscription();
+            if (backendEnabled) startPendingSubscription();
         } else {
             isAdmin = false;
             stopPendingSubscription();
@@ -2317,6 +2326,54 @@ function renderStructuredBiography(memberId) {
 
     host.style.display = "block";
     return true;
+}
+
+function toggleBranch(nodeId) {
+    const node = familyData.find((n) => n.id === nodeId);
+    if (!node) return;
+
+    const children = familyData.filter((n) => n.parentId === nodeId);
+    if (children.length === 0) return;
+
+    node.expanded = !node.expanded;
+    render();
+
+    if (node.expanded) {
+        nodeZoomMemory.set(node.id, scale);
+        setTimeout(() => {
+            const visibleChildren = familyData
+                .filter((n) => n.parentId === nodeId)
+                .sort((a, b) => (a.y || 0) - (b.y || 0));
+            const firstChild = visibleChildren[0];
+            if (!firstChild) return;
+
+            const maxScale = window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT ? 2.2 : 3;
+            const zoomedScale = Math.min(Math.max(scale * 1.18, 0.1), maxScale);
+            scale = zoomedScale;
+            centerViewOnNode(firstChild, {
+                animate: true,
+                duration: 460
+            });
+        }, 200);
+    } else {
+        setTimeout(() => {
+            const savedScale = nodeZoomMemory.get(node.id);
+            if (typeof savedScale === "number" && Number.isFinite(savedScale)) {
+                const maxScale = window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT ? 2.2 : 3;
+                scale = Math.min(Math.max(savedScale, 0.1), maxScale);
+            }
+            nodeZoomMemory.delete(node.id);
+
+            const liveNode = familyData.find((n) => n.id === nodeId);
+            if (!liveNode) return;
+            centerViewOnNode(liveNode, {
+                animate: true,
+                duration: 460
+            });
+        }, 200);
+    }
+
+    if (!backendEnabled) persistApprovedLocal();
 }
 
 window.openModal = openModal;
