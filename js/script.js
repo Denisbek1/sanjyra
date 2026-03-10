@@ -208,7 +208,9 @@ let firstConnectionsDrawDone = false;
 let loaderRenderDone = false;
 let loaderConnectionsDone = false;
 const LOADER_MIN_VISIBLE_MS = 3000;
-const LOADER_MAX_WAIT_MS = 20000;
+const LOADER_MAX_WAIT_MS = 10000;
+const IMAGE_PLACEHOLDER_SRC = "data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA=";
+let photoObserver = null;
 
 const appConfig = window.APP_CONFIG || {};
 const adminUids = Array.isArray(appConfig.adminUids) ? appConfig.adminUids : [];
@@ -277,6 +279,10 @@ function hideLoader() {
         document.body.classList.remove("loading");
     }
 
+    requestAnimationFrame(() => {
+        observeCardPhotos();
+    });
+
     // Recalculate connectors right after loader is removed.
     requestAnimationFrame(() => {
         scheduleDrawConnections({ initial: true, immediate: true });
@@ -300,14 +306,55 @@ function hideLoaderWithMinDelay(force = false) {
 }
 
 function tryHideLoader() {
-    const ready = loaderUiReady
-        && loaderDataReady
-        && (!backendEnabled || loaderAuthReady)
-        && loaderRenderDone
-        && loaderConnectionsDone;
+    const ready = loaderUiReady && loaderRenderDone && loaderConnectionsDone;
     if (!ready) return;
     setLoaderProgress(100);
     hideLoaderWithMinDelay(false);
+}
+
+function revealCardImage(img) {
+    if (!img || img.dataset.loaded === "true") return;
+    const src = img.dataset.src;
+    if (!src) return;
+    img.src = src;
+    img.dataset.loaded = "true";
+}
+
+function ensurePhotoObserver() {
+    if (photoObserver || typeof window === "undefined") return;
+    if (!("IntersectionObserver" in window)) return;
+
+    photoObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            const img = entry.target;
+            revealCardImage(img);
+            photoObserver.unobserve(img);
+        });
+    }, {
+        root: null,
+        rootMargin: "160px 0px",
+        threshold: 0.01
+    });
+}
+
+function observeCardPhotos() {
+    const host = document.getElementById("nodes-layer");
+    if (!host) return;
+    const images = host.querySelectorAll(".profile-img[data-src]");
+    if (!images.length) return;
+
+    ensurePhotoObserver();
+    images.forEach((img) => {
+        if (img.dataset.loaded === "true") return;
+        if (photoObserver) {
+            if (img.dataset.observed === "true") return;
+            img.dataset.observed = "true";
+            photoObserver.observe(img);
+            return;
+        }
+        revealCardImage(img);
+    });
 }
 
 function startLoaderMaxWaitTimer(timeoutMs = LOADER_MAX_WAIT_MS) {
@@ -1296,9 +1343,19 @@ function drawConnections() {
         }
     }
 
+    if (!loaderHidden) {
+        loaderConnectionsDone = true;
+        tryHideLoader();
+    }
+
 }
 
 function render() {
+    if (!loaderHidden) {
+        loaderRenderDone = false;
+        loaderConnectionsDone = false;
+    }
+
     const searchContext = buildSearchContext();
     const { nodeWidth, ancestryGap } = getTreeMetrics();
     layout("root", 0, 0, searchContext);
@@ -1381,7 +1438,7 @@ function render() {
         ` : "";
 
         el.innerHTML = `
-            <img src="${mainPhoto}" class="profile-img" loading="lazy" />
+            <img src="${IMAGE_PLACEHOLDER_SRC}" data-src="${mainPhoto}" class="profile-img" loading="lazy" decoding="async" />
             <div class="node-main-content">
                 <div class="flex items-center mb-1">
                     <div class="name-text">${n.name}</div>
@@ -1481,10 +1538,7 @@ function render() {
     scheduleDrawConnections({ initial: !firstConnectionsDrawDone });
     requestAnimationFrame(() => {
         drawConnections();
-        if (!loaderHidden) {
-            loaderConnectionsDone = true;
-            tryHideLoader();
-        }
+        if (loaderHidden) observeCardPhotos();
     });
     renderSearchResults();
 }
@@ -2010,6 +2064,7 @@ window.addEventListener("resize", () => {
 
 window.addEventListener("load", () => {
     runDrawConnectionsFrame();
+    observeCardPhotos();
 });
 
 function openBioModal(memberId) {
