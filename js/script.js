@@ -344,7 +344,7 @@ function hideLoaderWithMinDelay(force = false) {
 }
 
 function tryHideLoader() {
-    const ready = loaderUiReady && loaderRenderDone && loaderConnectionsDone;
+    const ready = loaderRenderDone && loaderConnectionsDone;
     if (!ready) return;
     setLoaderProgress(100);
     hideLoaderWithMinDelay(false);
@@ -2159,7 +2159,7 @@ function openBioModal(memberId) {
     textEl.textContent = node.bio || getDefaultBio(node);
 
     if (node.id === "root") {
-        ancestors.textContent = `Ата-тек: ${rootAncestors.join(" -> ")}`;
+        ancestors.textContent = "Ата-тек: Адыгине → Кенчим → Жакшылык → Токобай → Карагене → Өмүрзак → Мамбет → Нурбай → Дүйшөбай → Кул → Абдраман";
         ancestors.style.display = "block";
     } else {
         ancestors.textContent = "";

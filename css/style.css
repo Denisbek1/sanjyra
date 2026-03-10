@@ -1917,3 +1917,21 @@ textarea:focus { border-color: var(--accent-gold); }
     text-align: justify;
     text-justify: inter-word;
 }
+
+.site-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 8px 0 10px;
+    flex-wrap: nowrap;
+}
+
+.site-icon {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+}
+
+.site-link a {
+    white-space: nowrap;
+}
