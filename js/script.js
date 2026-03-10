@@ -198,6 +198,7 @@ let loaderHidden = false;
 let loaderProgress = 0;
 let loaderTargetProgress = 0;
 let loaderProgressTimer = null;
+let loaderFailSafeTimer = null;
 let drawConnectionsRaf = null;
 let drawConnectionsTimer = null;
 let treeCardsReady = false;
@@ -246,6 +247,10 @@ function hideLoader() {
     if (loaderHidden) return;
     loaderHidden = true;
     setLoaderProgress(100, true);
+    if (loaderFailSafeTimer) {
+        clearTimeout(loaderFailSafeTimer);
+        loaderFailSafeTimer = null;
+    }
 
     const loader = document.getElementById("app-loader");
     if (loader) {
@@ -272,6 +277,18 @@ function hideLoader() {
 function tryHideLoader() {
     const ready = loaderUiReady && loaderDataReady && (!backendEnabled || loaderAuthReady);
     if (ready) hideLoader();
+}
+
+function startLoaderFailSafe(timeoutMs = 12000) {
+    if (loaderFailSafeTimer) clearTimeout(loaderFailSafeTimer);
+    loaderFailSafeTimer = setTimeout(() => {
+        if (loaderHidden) return;
+        loaderUiReady = true;
+        loaderAuthReady = true;
+        loaderDataReady = true;
+        setLoaderProgress(100, true);
+        hideLoader();
+    }, timeoutMs);
 }
 
 function toStoreNode(node) {
@@ -1913,22 +1930,32 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.classList.add("loading");
     }
     setLoaderProgress(0, true);
+    startLoaderFailSafe();
 
-    bindStaticUiEvents();
-    initSidebarContent();
-    loadInitialLocalData();
-    render();
-    centerOnRootPerson({
-        animate: true,
-        duration: VIEWPORT_ANIMATION_MS
-    });
-    setLoaderProgress(30);
-    initBackend();
-    updateAdminUi();
-    renderPendingList();
-    loaderUiReady = true;
-    setLoaderProgress(40);
-    tryHideLoader();
+    try {
+        setLoaderProgress(8, true);
+        bindStaticUiEvents();
+        initSidebarContent();
+        loadInitialLocalData();
+        render();
+        centerOnRootPerson({
+            animate: true,
+            duration: VIEWPORT_ANIMATION_MS
+        });
+        setLoaderProgress(30);
+        initBackend();
+        updateAdminUi();
+        renderPendingList();
+        loaderUiReady = true;
+        setLoaderProgress(40);
+        tryHideLoader();
+    } catch (error) {
+        loaderUiReady = true;
+        loaderAuthReady = true;
+        loaderDataReady = true;
+        setLoaderProgress(100, true);
+        hideLoader();
+    }
 });
 
 window.addEventListener("resize", () => {
