@@ -198,12 +198,15 @@ let loaderHidden = false;
 let loaderProgress = 0;
 let loaderTargetProgress = 0;
 let loaderProgressTimer = null;
-let loaderFailSafeTimer = null;
+let loaderMinTimer = null;
+let loaderMaxTimer = null;
+let loaderStartedAt = 0;
 let drawConnectionsRaf = null;
-let drawConnectionsTimer = null;
 let treeCardsReady = false;
 let treeCenteredReady = false;
 let firstConnectionsDrawDone = false;
+const LOADER_MIN_VISIBLE_MS = 3000;
+const LOADER_MAX_WAIT_MS = 20000;
 
 const appConfig = window.APP_CONFIG || {};
 const adminUids = Array.isArray(appConfig.adminUids) ? appConfig.adminUids : [];
@@ -247,9 +250,13 @@ function hideLoader() {
     if (loaderHidden) return;
     loaderHidden = true;
     setLoaderProgress(100, true);
-    if (loaderFailSafeTimer) {
-        clearTimeout(loaderFailSafeTimer);
-        loaderFailSafeTimer = null;
+    if (loaderMinTimer) {
+        clearTimeout(loaderMinTimer);
+        loaderMinTimer = null;
+    }
+    if (loaderMaxTimer) {
+        clearTimeout(loaderMaxTimer);
+        loaderMaxTimer = null;
     }
 
     const loader = document.getElementById("app-loader");
@@ -268,26 +275,44 @@ function hideLoader() {
         document.body.classList.remove("loading");
     }
 
-    // Draw connections only after loader is gone and layout is stable.
-    setTimeout(() => {
+    // Recalculate connectors right after loader is removed.
+    requestAnimationFrame(() => {
         scheduleDrawConnections({ initial: true, immediate: true });
-    }, 420);
+    });
+}
+
+function hideLoaderWithMinDelay(force = false) {
+    if (loaderHidden) return;
+    const elapsed = Date.now() - loaderStartedAt;
+    const waitMs = force ? 0 : Math.max(0, LOADER_MIN_VISIBLE_MS - elapsed);
+
+    if (waitMs > 0) {
+        if (loaderMinTimer) clearTimeout(loaderMinTimer);
+        loaderMinTimer = setTimeout(() => {
+            hideLoaderWithMinDelay(true);
+        }, waitMs);
+        return;
+    }
+
+    hideLoader();
 }
 
 function tryHideLoader() {
     const ready = loaderUiReady && loaderDataReady && (!backendEnabled || loaderAuthReady);
-    if (ready) hideLoader();
+    if (!ready) return;
+    setLoaderProgress(100);
+    hideLoaderWithMinDelay(false);
 }
 
-function startLoaderFailSafe(timeoutMs = 12000) {
-    if (loaderFailSafeTimer) clearTimeout(loaderFailSafeTimer);
-    loaderFailSafeTimer = setTimeout(() => {
+function startLoaderMaxWaitTimer(timeoutMs = LOADER_MAX_WAIT_MS) {
+    if (loaderMaxTimer) clearTimeout(loaderMaxTimer);
+    loaderMaxTimer = setTimeout(() => {
         if (loaderHidden) return;
         loaderUiReady = true;
         loaderAuthReady = true;
         loaderDataReady = true;
         setLoaderProgress(100, true);
-        hideLoader();
+        hideLoaderWithMinDelay(true);
     }, timeoutMs);
 }
 
@@ -1209,12 +1234,8 @@ function scheduleDrawConnections(options = {}) {
     if (!canDrawConnections()) return;
 
     if (initial && !firstConnectionsDrawDone) {
-        if (drawConnectionsTimer) clearTimeout(drawConnectionsTimer);
-        drawConnectionsTimer = setTimeout(() => {
-            drawConnectionsTimer = null;
-            firstConnectionsDrawDone = true;
-            runDrawConnectionsFrame();
-        }, 50);
+        firstConnectionsDrawDone = true;
+        runDrawConnectionsFrame();
         return;
     }
 
@@ -1930,7 +1951,8 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.classList.add("loading");
     }
     setLoaderProgress(0, true);
-    startLoaderFailSafe();
+    loaderStartedAt = Date.now();
+    startLoaderMaxWaitTimer();
 
     try {
         setLoaderProgress(8, true);
@@ -1954,7 +1976,7 @@ document.addEventListener("DOMContentLoaded", () => {
         loaderAuthReady = true;
         loaderDataReady = true;
         setLoaderProgress(100, true);
-        hideLoader();
+        hideLoaderWithMinDelay(true);
     }
 });
 
@@ -1965,6 +1987,10 @@ window.addEventListener("resize", () => {
 
 window.addEventListener("resize", () => {
     redrawConnections();
+});
+
+window.addEventListener("load", () => {
+    runDrawConnectionsFrame();
 });
 
 function openBioModal(memberId) {
