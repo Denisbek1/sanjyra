@@ -182,8 +182,6 @@ let currentParentId = null;
 let isAdmin = false;
 let currentUser = null;
 let ancestryExpanded = false;
-let currentSearchQuery = "";
-let searchPanelOpen = false;
 
 let backendEnabled = false;
 let db = null;
@@ -325,16 +323,16 @@ function getDefaultBio(node) {
     return "Өмүр баян азырынча кошула элек.";
 }
 
-function normalizeSearchText(value) {
-    return String(value || "").trim().toLowerCase();
-}
-
 function isMobileLayout() {
     return window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT;
 }
 
 function getSearchPanelHeight() {
-    return searchPanelOpen ? Math.min(320, Math.round(window.innerHeight * 0.24)) : 0;
+    return 0;
+}
+
+function buildSearchContext() {
+    return null;
 }
 
 function getTreeMetrics() {
@@ -345,73 +343,6 @@ function getTreeMetrics() {
         rootNodeWidth: isMobileLayout ? MOBILE_ROOT_NODE_WIDTH : DESKTOP_ROOT_NODE_WIDTH,
         ancestryGap: isMobileLayout ? MOBILE_ANCESTRY_GAP : DESKTOP_ANCESTRY_GAP
     };
-}
-
-function buildSearchContext() {
-    const query = normalizeSearchText(currentSearchQuery);
-    if (!query) return null;
-
-    const nodeById = new Map(familyData.map((node) => [node.id, node]));
-    const visibleIds = new Set();
-    const expandedIds = new Set();
-    let matchedCount = 0;
-
-    familyData.forEach((node) => {
-        if (!normalizeSearchText(node.name).includes(query)) return;
-        matchedCount += 1;
-
-        let current = node;
-        while (current) {
-            visibleIds.add(current.id);
-            if (current.parentId) expandedIds.add(current.parentId);
-            current = current.parentId ? (nodeById.get(current.parentId) || null) : null;
-        }
-    });
-
-    return { query, visibleIds, expandedIds, matchedCount };
-}
-
-function getSearchMatches(limit) {
-    const query = normalizeSearchText(currentSearchQuery);
-    if (!query) return [];
-
-    const matches = familyData.filter((node) => normalizeSearchText(node.name).includes(query));
-    return typeof limit === "number" ? matches.slice(0, limit) : matches;
-}
-
-function renderSearchResults() {
-    const host = document.getElementById("search-results");
-    if (!host) return;
-
-    if (!searchPanelOpen) {
-        host.innerHTML = "";
-        return;
-    }
-
-    const matches = getSearchMatches();
-    if (!currentSearchQuery) {
-        host.innerHTML = '<div class="search-results-empty">Атын жазыңыз.</div>';
-        return;
-    }
-
-    if (!matches.length) {
-        host.innerHTML = `<div class="search-results-empty">"${currentSearchQuery}" боюнча эч ким табылган жок.</div>`;
-        return;
-    }
-
-    host.innerHTML = matches.map((node) => `
-        <button type="button" class="search-result-item" onclick="selectSearchResult('${node.id}')">
-            <span class="search-result-item-name">${node.name}</span>
-            <span class="search-result-item-meta">${getParentDisplayName(node.parentId, "")}${node.bdate ? ` • ${node.bdate}` : ""}</span>
-        </button>
-    `).join("");
-}
-
-function syncSearchPanelState() {
-    const searchBar = document.getElementById("top-search-bar");
-    if (!searchBar) return;
-    searchBar.classList.toggle("is-open", searchPanelOpen);
-    renderSearchResults();
 }
 
 function getTreeChildren(id, searchContext) {
@@ -431,50 +362,9 @@ function getParentDisplayName(parentId, parentName) {
     return parent ? parent.name : parentId;
 }
 
-function initSearchInput() {
-    const searchInput = document.getElementById("personSearch");
-    if (!searchInput || searchInput.dataset.bound === "true") return;
-
-    searchInput.dataset.bound = "true";
-    searchInput.addEventListener("focus", () => {
-        searchPanelOpen = true;
-        syncSearchPanelState();
-        resetView();
-    });
-
-    searchInput.addEventListener("input", (event) => {
-        const nextQuery = normalizeSearchText(event.target.value);
-        const wasActive = Boolean(currentSearchQuery);
-        currentSearchQuery = nextQuery;
-        if (Boolean(nextQuery) !== wasActive) resetView();
-        render();
-        renderSearchResults();
-    });
-
-    searchInput.addEventListener("keydown", (event) => {
-        if (event.key !== "Escape") return;
-        event.target.value = "";
-        currentSearchQuery = "";
-        searchPanelOpen = false;
-        syncSearchPanelState();
-        resetView();
-        render();
-    });
-}
-
-function closeSearchPanel() {
-    searchPanelOpen = false;
-    syncSearchPanelState();
-    resetView();
-    if (!rootNode) return;
-}
-
 function bindStaticUiEvents() {
     const mobileMenuBtn = document.getElementById("mobile-menu-btn");
     if (mobileMenuBtn) mobileMenuBtn.addEventListener("click", openSidebar);
-
-    const searchCloseBtn = document.getElementById("search-close-btn");
-    if (searchCloseBtn) searchCloseBtn.addEventListener("click", closeSearchPanel);
 
     const homeBtn = document.getElementById("home-btn");
     if (homeBtn) homeBtn.addEventListener("click", resetView);
@@ -695,19 +585,6 @@ function focusInitialNode() {
     });
 }
 
-function selectSearchResult(nodeId) {
-    const node = familyData.find((item) => item.id === nodeId);
-    if (!node) return;
-
-    currentSearchQuery = normalizeSearchText(node.name);
-    const searchInput = document.getElementById("personSearch");
-    if (searchInput) searchInput.value = node.name;
-    render();
-    searchPanelOpen = false;
-    syncSearchPanelState();
-    centerViewOnNode(node);
-}
-
 function openSidebar() {
     const overlay = document.getElementById("sidebar-overlay");
     if (!overlay) return;
@@ -916,9 +793,7 @@ function openModal(parentId) {
     const nameInput = document.getElementById("new-name");
     const dateInput = document.getElementById("new-date");
     const genderInput = document.getElementById("new-gender");
-    const bioInput = document.getElementById("new-bio");
-    const bioGroup = document.getElementById("member-bio-group");
-    if (!overlay || !titleEl || !parentNameEl || !confirmTextEl || !saveBtn || !nameInput || !dateInput || !genderInput || !bioInput || !bioGroup) return;
+    if (!overlay || !titleEl || !parentNameEl || !confirmTextEl || !saveBtn || !nameInput || !dateInput || !genderInput) return;
 
     overlay.style.display = "flex";
     titleEl.style.display = "none";
@@ -932,8 +807,6 @@ function openModal(parentId) {
     dateInput.value = "";
     nameInput.focus();
     genderInput.value = "male";
-    bioInput.value = "";
-    bioGroup.style.display = "none";
 }
 
 function closeModal() {
@@ -941,12 +814,10 @@ function closeModal() {
     const nameInput = document.getElementById("new-name");
     const dateInput = document.getElementById("new-date");
     const genderInput = document.getElementById("new-gender");
-    const bioInput = document.getElementById("new-bio");
-    const bioGroup = document.getElementById("member-bio-group");
     const titleEl = document.getElementById("member-modal-title");
     const parentNameEl = document.getElementById("member-modal-parent-name");
     const confirmTextEl = document.getElementById("member-modal-confirm-text");
-    if (!overlay || !nameInput || !dateInput || !genderInput || !bioInput || !bioGroup || !titleEl || !parentNameEl || !confirmTextEl) return;
+    if (!overlay || !nameInput || !dateInput || !genderInput || !titleEl || !parentNameEl || !confirmTextEl) return;
 
     overlay.style.display = "none";
     titleEl.style.display = "block";
@@ -956,13 +827,11 @@ function closeModal() {
     nameInput.value = "";
     dateInput.value = "";
     genderInput.value = "male";
-    bioInput.value = "";
-    bioGroup.style.display = "none";
     memberModalMode = "add";
     editMemberId = null;
 }
 
-function buildPendingPayload(name, date, gender, bio, parentId) {
+function buildPendingPayload(name, date, gender, parentId) {
     const parent = familyData.find((node) => node.id === parentId);
     return {
         name,
@@ -970,7 +839,7 @@ function buildPendingPayload(name, date, gender, bio, parentId) {
         bdate: date,
         gender,
         status: "pending",
-        bio,
+        bio: "",
         branchColor: parent ? (parent.branchColor || "") : "",
         parentId,
         parentName: parent ? parent.name : "",
@@ -986,16 +855,14 @@ async function saveNewMember() {
     const nameInput = document.getElementById("new-name");
     const dateInput = document.getElementById("new-date");
     const genderInput = document.getElementById("new-gender");
-    const bioInput = document.getElementById("new-bio");
-    if (!nameInput || !dateInput || !genderInput || !bioInput) return;
+    if (!nameInput || !dateInput || !genderInput) return;
 
     const name = nameInput.value.trim();
     const date = dateInput.value.trim();
     const gender = genderInput.value;
-    const bio = bioInput.value.trim();
     if (!name) return;
 
-    const pendingPayload = buildPendingPayload(name, date, gender, bio, currentParentId);
+    const pendingPayload = buildPendingPayload(name, date, gender, currentParentId);
 
     if (isAdmin) {
         const node = normalizeNode({
@@ -1058,10 +925,8 @@ function openEditModal(memberId) {
     const nameInput = document.getElementById("new-name");
     const dateInput = document.getElementById("new-date");
     const genderInput = document.getElementById("new-gender");
-    const bioInput = document.getElementById("new-bio");
-    const bioGroup = document.getElementById("member-bio-group");
     const overlay = document.getElementById("modal-overlay");
-    if (!titleEl || !parentNameEl || !confirmTextEl || !saveBtn || !nameInput || !dateInput || !genderInput || !bioInput || !bioGroup || !overlay) return;
+    if (!titleEl || !parentNameEl || !confirmTextEl || !saveBtn || !nameInput || !dateInput || !genderInput || !overlay) return;
 
     titleEl.style.display = "block";
     parentNameEl.style.display = "none";
@@ -1072,8 +937,6 @@ function openEditModal(memberId) {
     nameInput.value = node.name || "";
     dateInput.value = node.bdate || "";
     genderInput.value = node.gender || "male";
-    bioInput.value = node.bio || "";
-    bioGroup.style.display = canShowLifeStory(node) ? "block" : "none";
     overlay.style.display = "flex";
     nameInput.focus();
 }
@@ -1086,19 +949,16 @@ async function saveEditMember() {
     const nameInput = document.getElementById("new-name");
     const dateInput = document.getElementById("new-date");
     const genderInput = document.getElementById("new-gender");
-    const bioInput = document.getElementById("new-bio");
-    if (!nameInput || !dateInput || !genderInput || !bioInput) return;
+    if (!nameInput || !dateInput || !genderInput) return;
 
     const name = nameInput.value.trim();
     const date = dateInput.value.trim();
     const gender = genderInput.value;
-    const bio = canShowLifeStory(node) ? bioInput.value.trim() : node.bio;
     if (!name) return;
 
     node.name = name;
     node.bdate = date;
     node.gender = gender;
-    node.bio = bio;
 
     try {
         if (backendEnabled) {
@@ -1404,15 +1264,6 @@ function render() {
     nodesLayer.innerHTML = "";
     svg.innerHTML = "";
 
-    if (searchContext && searchContext.matchedCount === 0) {
-        const empty = document.createElement("div");
-        empty.className = "search-empty";
-        empty.textContent = `\"${currentSearchQuery}\" боюнча эч ким табылган жок.`;
-        nodesLayer.appendChild(empty);
-        updateTransform();
-        return;
-    }
-
     familyData.forEach((n) => {
         if (!isVisible(n, searchContext)) return;
 
@@ -1607,12 +1458,6 @@ function resetTree() {
     if (rootNode) rootNode.expanded = true;
 
     ancestryExpanded = false;
-    currentSearchQuery = "";
-
-    const searchInput = document.getElementById("personSearch");
-    if (searchInput) searchInput.value = "";
-    searchPanelOpen = false;
-    syncSearchPanelState();
 
     closeModal();
     closeBioModal();
@@ -1961,7 +1806,6 @@ function isUiOverlayTarget(target) {
         || target.closest("#sidebar-overlay")
         || target.closest("#mobile-sidebar")
         || target.closest(".sidebar-content")
-        || target.closest("#top-search-bar")
     );
 }
 
@@ -2071,10 +1915,8 @@ document.addEventListener("DOMContentLoaded", () => {
     setLoaderProgress(0, true);
 
     bindStaticUiEvents();
-    initSearchInput();
     initSidebarContent();
     loadInitialLocalData();
-    syncSearchPanelState();
     render();
     centerOnRootPerson({
         animate: true,
@@ -2090,7 +1932,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 window.addEventListener("resize", () => {
-    syncSearchPanelState();
     render();
     resetView();
 });
@@ -2211,6 +2052,4 @@ window.openBioModal = openBioModal;
 window.closeBioModal = closeBioModal;
 window.resetTree = resetTree;
 window.quickShareSite = quickShareSite;
-window.closeSearchPanel = closeSearchPanel;
-window.selectSearchResult = selectSearchResult;
 window.centerOnRootPerson = centerOnRootPerson;
