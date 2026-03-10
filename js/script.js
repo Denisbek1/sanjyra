@@ -559,12 +559,30 @@ function centerViewOnExpandedChildren(node, options = {}) {
     }
 }
 
-function focusInitialNode() {
-    const targetNode = familyData.find((node) => node.name === "Абдраман") || familyData.find((node) => node.id === "root");
-    if (!targetNode) return;
+function centerOnRootPerson(options = {}) {
+    const {
+        animate = true,
+        duration = VIEWPORT_ANIMATION_MS,
+        scaleOverride = null
+    } = options;
 
-    scale = Math.min(Math.max(INITIAL_FOCUS_SCALE, 1.5), 2.4);
-    centerViewOnNode(targetNode, { animate: true, duration: VIEWPORT_ANIMATION_MS });
+    const rootNode = familyData.find((node) => node.name === "Абдраман") || familyData.find((node) => node.id === "root");
+    if (!rootNode) return;
+
+    if (typeof scaleOverride === "number" && Number.isFinite(scaleOverride)) {
+        const maxScale = window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT ? 2.2 : 3;
+        scale = Math.min(Math.max(scaleOverride, 0.1), maxScale);
+    }
+
+    centerViewOnNode(rootNode, { animate, duration });
+}
+
+function focusInitialNode() {
+    centerOnRootPerson({
+        animate: true,
+        duration: VIEWPORT_ANIMATION_MS,
+        scaleOverride: Math.min(Math.max(INITIAL_FOCUS_SCALE, 1.5), 2.4)
+    });
 }
 
 function selectSearchResult(nodeId) {
@@ -1377,28 +1395,11 @@ function isVisible(node, searchContext) {
 }
 
 function resetView() {
-    const isMobile = isMobileLayout();
-    const rootNode = familyData.find((node) => node.id === "root");
-    if (!rootNode) return;
-    const rootWidth = getNodeWidth(rootNode);
-    const targetCenterX = window.innerWidth / 2;
-    const searchBar = document.getElementById("top-search-bar");
-    const searchBarHeight = searchBar ? searchBar.offsetHeight : 0;
-    const topInset = isMobile
-        ? (getSearchPanelHeight() || (searchBarHeight + 28))
-        : (searchBarHeight + 36);
-    const effectiveTopInset = getSearchPanelHeight() || topInset;
-    const targetCenterY = effectiveTopInset + ((window.innerHeight - effectiveTopInset) / 2);
-    const rootCenterX = (rootNode.x || 0) + (rootWidth / 2);
-    const rootCenterY = (rootNode.y || 0) + (getNodeHeight(rootNode) / 2);
-
-    // Home should keep current expanded branches but move camera closer to root.
-    scale = isMobile ? 1.02 : 0.9;
-    const horizontalBias = isMobile ? -0.2 : -0.12;
-    const biasedCenterX = targetCenterX + (window.innerWidth * horizontalBias);
-    posX = Math.round(biasedCenterX - (rootCenterX * scale));
-    posY = Math.round(targetCenterY - (rootCenterY * scale));
-    updateTransform();
+    centerOnRootPerson({
+        animate: true,
+        duration: 460,
+        scaleOverride: isMobileLayout() ? 1.02 : 0.9
+    });
 }
 
 function resetTree() {
@@ -1423,28 +1424,11 @@ function resetTree() {
     if (!backendEnabled) persistApprovedLocal();
     render();
     // Slightly wider framing than Home so all 10 sons fit comfortably.
-    resetView();
-    if (isMobileLayout()) {
-        scale = 0.96;
-    } else {
-        scale = 0.88;
-    }
-    const targetCenterX = window.innerWidth / 2;
-    const searchBar = document.getElementById("top-search-bar");
-    const searchBarHeight = searchBar ? searchBar.offsetHeight : 0;
-    const topInset = isMobileLayout()
-        ? (getSearchPanelHeight() || (searchBarHeight + 28))
-        : (searchBarHeight + 36);
-    const effectiveTopInset = getSearchPanelHeight() || topInset;
-    const targetCenterY = effectiveTopInset + ((window.innerHeight - effectiveTopInset) / 2);
-    const rootWidth = getNodeWidth(rootNode);
-    const rootCenterX = (rootNode.x || 0) + (rootWidth / 2);
-    const rootCenterY = (rootNode.y || 0) + (getNodeHeight(rootNode) / 2);
-    const horizontalBias = isMobileLayout() ? -0.2 : -0.12;
-    const biasedCenterX = targetCenterX + (window.innerWidth * horizontalBias);
-    posX = Math.round(biasedCenterX - (rootCenterX * scale));
-    posY = Math.round(targetCenterY - (rootCenterY * scale));
-    updateTransform();
+    centerOnRootPerson({
+        animate: true,
+        duration: 460,
+        scaleOverride: isMobileLayout() ? 0.96 : 0.88
+    });
 }
 
 function updateTransform() {
@@ -1868,7 +1852,11 @@ window.onload = () => {
     loadInitialLocalData();
     syncSearchPanelState();
     render();
-    focusInitialNode();
+    centerOnRootPerson({
+        animate: true,
+        duration: VIEWPORT_ANIMATION_MS,
+        scaleOverride: Math.min(Math.max(INITIAL_FOCUS_SCALE, 1.5), 2.4)
+    });
     initBackend();
     updateAdminUi();
     renderPendingList();
@@ -1994,3 +1982,4 @@ window.resetTree = resetTree;
 window.quickShareSite = quickShareSite;
 window.closeSearchPanel = closeSearchPanel;
 window.selectSearchResult = selectSearchResult;
+window.centerOnRootPerson = centerOnRootPerson;
