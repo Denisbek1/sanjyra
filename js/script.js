@@ -181,7 +181,6 @@ const MOBILE_ANCESTRY_GAP = 44;
 let currentParentId = null;
 let isAdmin = false;
 let currentUser = null;
-let ancestryExpanded = false;
 
 let backendEnabled = false;
 let db = null;
@@ -211,6 +210,45 @@ const LOADER_MIN_VISIBLE_MS = 3000;
 const LOADER_MAX_WAIT_MS = 10000;
 const IMAGE_PLACEHOLDER_SRC = "data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA=";
 let photoObserver = null;
+
+const FULL_LINEAGE_MODAL_HTML = `
+    <div class="lineage-modal-block">
+        <h4 class="bio-block-title">Кыргыз санжырасынын башаты</h4>
+        <p class="bio-block-text">
+            Кыргыз элинин санжырасы <span class="gold">Долон бий</span>ден башталат.
+            Анын урпактары үч чоң бөлүккө бөлүнгөн:
+        </p>
+        <p class="bio-block-text">
+            • <span class="gold">Оң канат</span><br>
+            • <span class="gold">Сол канат</span><br>
+            • <span class="gold">Ичкилик</span>
+        </p>
+        <p class="bio-block-text">Биздин ата-тек <span class="gold">Оң канаттан</span> тараган.</p>
+    </div>
+    <div class="lineage-modal-block">
+        <h4 class="bio-block-title">Адыгине уруусу</h4>
+        <p class="bio-block-text">
+            Биздин ата-бабалар <span class="gold">Адыгине уруусуна</span> кирет.
+            Адыгине кыргыз элиндеги байыркы жана белгилүү уруулардын бири.
+        </p>
+    </div>
+    <div class="lineage-modal-block">
+        <h4 class="bio-block-title">Биздин ата-бабалар</h4>
+        <div class="lineage-chain">
+            <div class="lineage-chain-item"><span class="gold">Адыгине</span></div>
+            <div class="lineage-chain-arrow">↓ <span class="gold">Кенчим</span></div>
+            <div class="lineage-chain-arrow">↓ <span class="gold">Жакшылык</span></div>
+            <div class="lineage-chain-arrow">↓ <span class="gold">Токобай</span></div>
+            <div class="lineage-chain-arrow">↓ <span class="gold">Карагене</span></div>
+            <div class="lineage-chain-arrow">↓ <span class="gold">Өмүрзак</span></div>
+            <div class="lineage-chain-arrow">↓ <span class="gold">Мамбет</span></div>
+            <div class="lineage-chain-arrow">↓ <span class="gold">Нурбай</span></div>
+            <div class="lineage-chain-arrow">↓ <span class="gold">Дүйшөбай</span></div>
+            <div class="lineage-chain-arrow">↓ <span class="gold">Кул</span></div>
+            <div class="lineage-chain-arrow">↓ <span class="gold">Абдраман</span></div>
+        </div>
+    </div>
+`;
 
 const appConfig = window.APP_CONFIG || {};
 const adminUids = Array.isArray(appConfig.adminUids) ? appConfig.adminUids : [];
@@ -1489,41 +1527,21 @@ function render() {
             ancestryEl.className = "node-container node-ancestry-card";
             ancestryEl.style.left = ancestryX + "px";
             ancestryEl.style.top = ancestryY + "px";
-            ancestryEl.style.height = ancestryExpanded ? "auto" : NODE_HEIGHT + "px";
-            ancestryEl.innerHTML = ancestryExpanded ? `
+            ancestryEl.style.height = NODE_HEIGHT + "px";
+            ancestryEl.innerHTML = `
                 <div class="ancestry-shell">
                     <div class="ancestry-head">
-                        <div class="ancestry-head-icon"><img src="assets/atatek.webp" alt="Ата-тек" loading="lazy"></div>
+                        <div class="ancestry-head-icon"><img src="assets/atatek.webp" alt="Толук санжыра" loading="lazy"></div>
                         <div class="ancestry-head-copy">
-                            <div class="ancestry-head-title">Ата-тек жөнүндө</div>
-                            <div class="ancestry-head-sub">Негизги муундардын тарыхы</div>
-                        </div>
-                        <div class="ancestry-head-toggle"><i class="fas fa-chevron-up"></i></div>
-                    </div>
-                    <div class="ancestry-body">
-                        <div class="ancestry-pill-lineage">
-                            ${rootAncestors.map((name, index) => `
-                                <span class="ancestry-pill">${index + 1}. ${name}</span>
-                            `).join("")}
-                        </div>
-                        <div class="ancestry-inline-text ancestry-body-text">${ancestryAboutText}</div>
-                    </div>
-                </div>
-            ` : `
-                <div class="ancestry-shell">
-                    <div class="ancestry-head">
-                        <div class="ancestry-head-icon"><img src="assets/atatek.webp" alt="Ата-тек" loading="lazy"></div>
-                        <div class="ancestry-head-copy">
-                            <div class="ancestry-head-title">Ата-тек</div>
+                            <div class="ancestry-head-title">Толук санжыра</div>
                             <div class="ancestry-head-sub">Кеңири көрүү үчүн басыңыз</div>
                         </div>
-                        <div class="ancestry-head-toggle"><i class="fas fa-chevron-down"></i></div>
+                        <div class="ancestry-head-toggle"><i class="fas fa-chevron-right"></i></div>
                     </div>
                 </div>
             `;
             ancestryEl.onclick = () => {
-                ancestryExpanded = !ancestryExpanded;
-                render();
+                openFullLineageModal();
             };
             nodesLayer.appendChild(ancestryEl);
         }
@@ -1565,8 +1583,6 @@ function resetTree() {
     // Reset must keep only root branch open (root + 10 sons).
     const rootNode = familyData.find((node) => node.id === "root");
     if (rootNode) rootNode.expanded = true;
-
-    ancestryExpanded = false;
 
     closeModal();
     closeBioModal();
@@ -2067,6 +2083,30 @@ window.addEventListener("load", () => {
     observeCardPhotos();
 });
 
+function openFullLineageModal() {
+    const modal = document.getElementById("bio-overlay");
+    const titleEl = document.getElementById("bio-modal-title");
+    const subtitleEl = document.getElementById("bio-modal-subtitle");
+    const photoEl = document.getElementById("bio-modal-photo");
+    const textEl = document.getElementById("bio-modal-text");
+    const ancestorsEl = document.getElementById("bio-modal-ancestors");
+    const structuredEl = document.getElementById("bio-modal-structured");
+    const sectionTitleEl = document.querySelector("#bio-modal-shell .bio-section-title");
+    if (!modal || !titleEl || !subtitleEl || !photoEl || !textEl || !ancestorsEl || !structuredEl || !sectionTitleEl) return;
+
+    titleEl.textContent = "Кыргыз санжырасы";
+    subtitleEl.textContent = "";
+    subtitleEl.style.display = "none";
+    photoEl.style.display = "none";
+    sectionTitleEl.style.display = "none";
+    textEl.style.display = "none";
+    ancestorsEl.style.display = "none";
+    ancestorsEl.textContent = "";
+    structuredEl.innerHTML = FULL_LINEAGE_MODAL_HTML;
+    structuredEl.style.display = "block";
+    modal.style.display = "flex";
+}
+
 function openBioModal(memberId) {
     const node = familyData.find((n) => n.id === memberId);
     if (!node) return;
@@ -2077,7 +2117,8 @@ function openBioModal(memberId) {
     const subtitleEl = document.getElementById("bio-modal-subtitle");
     const textEl = document.getElementById("bio-modal-text");
     const ancestors = document.getElementById("bio-modal-ancestors");
-    if (!photoEl || !subtitleEl || !textEl || !ancestors) return;
+    const sectionTitleEl = document.querySelector("#bio-modal-shell .bio-section-title");
+    if (!photoEl || !subtitleEl || !textEl || !ancestors || !sectionTitleEl) return;
 
     const photo = node.id === "root"
         ? rootPhoto
@@ -2104,6 +2145,8 @@ function openBioModal(memberId) {
     const titleEl = document.getElementById("bio-modal-title");
     if (!titleEl) return;
     titleEl.textContent = node.name;
+    sectionTitleEl.textContent = "Өмүр баяны";
+    sectionTitleEl.style.display = "block";
     photoEl.style.display = isRootChild ? "none" : "block";
     if (!isRootChild) {
         photoEl.src = photo;
@@ -2176,6 +2219,7 @@ window.openEditModal = openEditModal;
 window.deleteMember = deleteMember;
 window.saveMemberAction = saveMemberAction;
 window.openBioModal = openBioModal;
+window.openFullLineageModal = openFullLineageModal;
 window.closeBioModal = closeBioModal;
 window.resetTree = resetTree;
 window.quickShareSite = quickShareSite;

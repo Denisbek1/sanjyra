@@ -1188,6 +1188,35 @@ button i {
     text-justify: inter-word;
 }
 
+.gold {
+    color: #c5a059;
+    font-weight: 600;
+}
+
+.lineage-modal-block {
+    border: 1px solid rgba(197, 160, 89, 0.25);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 12px;
+    margin-bottom: 16px;
+}
+
+.lineage-modal-block:last-child {
+    margin-bottom: 0;
+}
+
+.lineage-chain {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.lineage-chain-item,
+.lineage-chain-arrow {
+    font-size: 0.92rem;
+    line-height: 1.45;
+}
+
 .admin-pass-modal {
     width: min(560px, calc(100vw - 28px));
     background: linear-gradient(145deg, rgba(34, 38, 48, 0.98), rgba(24, 28, 36, 0.98));
@@ -1544,6 +1573,12 @@ textarea:focus { border-color: var(--accent-gold); }
     .bio-block-text {
         font-size: 0.8rem;
         line-height: 1.5;
+    }
+
+    .lineage-chain-item,
+    .lineage-chain-arrow {
+        font-size: 0.84rem;
+        line-height: 1.45;
     }
 }
 
