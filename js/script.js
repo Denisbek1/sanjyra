@@ -186,6 +186,9 @@ let backendEnabled = false;
 let authEnabled = false;
 let db = null;
 let auth = null;
+let authStateObserverAttached = false;
+let authStateUnsubscribe = null;
+let firebaseAuthScriptPromise = null;
 let pendingUnsubscribe = null;
 let noticeTimer = null;
 let adminSignInAttempted = false;
@@ -212,6 +215,7 @@ let lastCardTouchToggleAt = 0;
 const LOADER_MIN_VISIBLE_MS = 3000;
 const LOADER_MAX_WAIT_MS = 10000;
 const IMAGE_PLACEHOLDER_SRC = "data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA=";
+const FIREBASE_AUTH_COMPAT_CDN = "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js";
 let photoObserver = null;
 
 const FULL_LINEAGE_MODAL_HTML = `
