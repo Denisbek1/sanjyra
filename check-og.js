@@ -1,7 +1,7 @@
 const https = require("https");
 
 https
-  .get("https://abdramanov.netlify.app/", (res) => {
+  .get("https://abdraman.pages.dev/", (res) => {
     let html = "";
     res.on("data", (chunk) => {
       html += chunk;
