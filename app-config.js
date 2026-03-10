@@ -9,5 +9,9 @@ window.APP_CONFIG = {
     measurementId: "G-T6BVB2CYN8"
   },
 
-  adminUids: ["IuQps9fJupMPW4a7aeNSLQDr52m2"],
+  adminUids: [
+    "IuQps9fJupMPW4a7aeNSLQDr52m2",
+    "M498sayVX2dVLU03yUGgkDMAlA73",
+    "cQsZSGsClCbyLtrVnry6qcEr4fr1"
+  ],
 };

@@ -189,6 +189,7 @@ let db = null;
 let auth = null;
 let pendingUnsubscribe = null;
 let noticeTimer = null;
+let adminSignInAttempted = false;
 let memberModalMode = "add";
 let editMemberId = null;
 
@@ -847,6 +848,7 @@ function buildPendingPayload(name, date, gender, bio, parentId) {
         partner: "",
         partnerDate: "",
         expanded: false,
+        createdAt: null,
         createdAtISO: new Date().toISOString()
     };
 }
@@ -1461,6 +1463,7 @@ function updateAdminUi() {
     const authBlock = document.getElementById("admin-auth-block");
     const userLine = document.getElementById("admin-user-line");
     const logoutBtn = document.getElementById("admin-logout-btn");
+    const pendingTitle = document.getElementById("pending-title");
     const pendingWrap = document.getElementById("pending-list");
     if (!authBlock || !userLine || !logoutBtn || !pendingWrap) return;
 
@@ -1472,20 +1475,24 @@ function updateAdminUi() {
             authBlock.style.display = isAdmin ? "none" : "block";
             logoutBtn.style.display = "block";
             pendingWrap.style.display = isAdmin ? "flex" : "none";
+            if (pendingTitle) pendingTitle.style.display = isAdmin ? "block" : "none";
         } else {
             authBlock.style.display = "block";
             logoutBtn.style.display = "none";
             pendingWrap.style.display = "none";
+            if (pendingTitle) pendingTitle.style.display = "none";
         }
     } else {
         authBlock.style.display = isAdmin ? "none" : "block";
         logoutBtn.style.display = isAdmin ? "block" : "none";
         pendingWrap.style.display = isAdmin ? "flex" : "none";
+        if (pendingTitle) pendingTitle.style.display = isAdmin ? "block" : "none";
     }
 }
 
 function renderPendingList(itemsFromBackend) {
     const wrap = document.getElementById("pending-list");
+    if (!wrap) return;
     let list = [];
 
     if (backendEnabled) {
@@ -1504,17 +1511,12 @@ function renderPendingList(itemsFromBackend) {
 
     wrap.innerHTML = list.map((item) => `
         <div class="pending-item">
-            <div class="pending-title-row">
-                <strong>${item.name || ""}</strong>
-                <span class="pending-target-chip">Кошулат: ${getParentDisplayName(item.parentId, item.parentName)}</span>
-            </div>
-            <div class="pending-meta">Туулган жылы: ${item.year || item.bdate || "-"}</div>
-            <div class="pending-meta">Статус: ${item.status || "pending"}</div>
-            <div class="pending-meta">Parent ID: ${item.parentId || "-"}</div>
-            <div class="pending-meta">Заявка ID: ${item.id}</div>
+            <div class="pending-meta"><strong>Родитель:</strong> ${item.parentName || getParentDisplayName(item.parentId, "") || "-"}</div>
+            <div class="pending-meta"><strong>Добавляемый человек:</strong> ${item.name || "-"}</div>
+            <div class="pending-meta"><strong>Год рождения:</strong> ${item.year || item.bdate || "-"}</div>
             <div class="pending-actions">
-                <button class="btn-save" onclick="approvePending('${item.id}')">Approve</button>
-                <button class="btn-save bg-gray-600 text-white" onclick="rejectPending('${item.id}')">Reject</button>
+                <button class="btn-save" onclick="approvePending('${item.id}')">Сохранить</button>
+                <button class="btn-save bg-gray-600 text-white" onclick="rejectPending('${item.id}')">Удалить</button>
             </div>
         </div>
     `).join("");
@@ -1526,6 +1528,21 @@ async function adminSignIn() {
         return;
     }
 
+    if (auth.currentUser) {
+        if (adminUids.includes(auth.currentUser.uid)) {
+            isAdmin = true;
+            updateAdminUi();
+            renderPendingList();
+        } else {
+            isAdmin = false;
+            updateAdminUi();
+            renderPendingList([]);
+            showNotice("Сиз админ боло албайсыз", "error");
+        }
+        return;
+    }
+
+    adminSignInAttempted = true;
     try {
         const provider = new firebase.auth.GoogleAuthProvider();
         await auth.signInWithPopup(provider);
@@ -1676,15 +1693,29 @@ function initBackend() {
 
     auth.onAuthStateChanged((user) => {
         currentUser = user;
-        isAdmin = Boolean(user && adminUids.includes(user.uid));
 
-        if (isAdmin) {
-            startPendingSubscription();
-        } else {
+        if (!user) {
+            isAdmin = false;
             stopPendingSubscription();
             renderPendingList([]);
+            updateAdminUi();
+            adminSignInAttempted = false;
+            return;
         }
 
+        if (adminUids.includes(user.uid)) {
+            isAdmin = true;
+            startPendingSubscription();
+        } else {
+            isAdmin = false;
+            stopPendingSubscription();
+            renderPendingList([]);
+            if (adminSignInAttempted) {
+                showNotice("Сиз админ боло албайсыз", "error");
+            }
+        }
+
+        adminSignInAttempted = false;
         updateAdminUi();
     });
 }
