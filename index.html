@@ -24,7 +24,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body translate="no">
+<body class="loading" translate="no">
+    <div id="app-loader" aria-live="polite" aria-busy="true">
+        <div class="loader-content">
+            <div class="loader-circle"></div>
+            <div class="loader-text">Жүктөлүүдө...</div>
+        </div>
+    </div>
     <div class="top-bar">
         <button id="mobile-menu-btn" class="menu-btn" title="Меню" aria-label="Меню">☰</button>
         <div id="top-search-bar">

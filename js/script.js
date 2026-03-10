@@ -192,9 +192,37 @@ let noticeTimer = null;
 let adminSignInAttempted = false;
 let memberModalMode = "add";
 let editMemberId = null;
+let loaderUiReady = false;
+let loaderAuthReady = false;
+let loaderDataReady = false;
+let loaderHidden = false;
 
 const appConfig = window.APP_CONFIG || {};
 const adminUids = Array.isArray(appConfig.adminUids) ? appConfig.adminUids : [];
+
+function hideLoader() {
+    if (loaderHidden) return;
+    loaderHidden = true;
+
+    const loader = document.getElementById("app-loader");
+    if (loader) {
+        loader.style.opacity = "0";
+        setTimeout(() => {
+            if (loader && typeof loader.remove === "function") {
+                loader.remove();
+            }
+        }, 400);
+    }
+
+    if (document.body) {
+        document.body.classList.remove("loading");
+    }
+}
+
+function tryHideLoader() {
+    const ready = loaderUiReady && loaderDataReady && (!backendEnabled || loaderAuthReady);
+    if (ready) hideLoader();
+}
 
 function toStoreNode(node) {
     return {
@@ -1195,6 +1223,7 @@ function render() {
     layout("root", 0, 0, searchContext);
     const nodesLayer = document.getElementById("nodes-layer");
     const svg = document.getElementById("tree-svg");
+    if (!nodesLayer || !svg) return;
     nodesLayer.innerHTML = "";
     svg.innerHTML = "";
 
@@ -1512,8 +1541,8 @@ async function adminSignIn() {
         return;
     }
 
-    if (auth.currentUser) {
-        if (adminUids.includes(auth.currentUser.uid)) {
+    if (currentUser) {
+        if (adminUids.includes(currentUser.uid)) {
             isAdmin = true;
             updateAdminUi();
             renderPendingList();
@@ -1547,7 +1576,7 @@ async function adminSignIn() {
 }
 
 async function adminSignOut() {
-    if (backendEnabled && auth && auth.currentUser) {
+    if (backendEnabled && auth && currentUser) {
         await auth.signOut();
         return;
     }
@@ -1658,6 +1687,12 @@ function startApprovedSubscription() {
         ensureBranchColors(familyData);
         applyFixedNames(familyData);
         render();
+        loaderDataReady = true;
+        tryHideLoader();
+    }, () => {
+        // Keep app usable even when remote subscription fails.
+        loaderDataReady = true;
+        tryHideLoader();
     });
 }
 
@@ -1665,6 +1700,9 @@ function initBackend() {
     if (!window.firebase || !appConfig.firebase) {
         backendEnabled = false;
         updateAdminUi();
+        loaderAuthReady = true;
+        loaderDataReady = true;
+        tryHideLoader();
         return;
     }
 
@@ -1676,6 +1714,7 @@ function initBackend() {
     startApprovedSubscription();
 
     auth.onAuthStateChanged((user) => {
+        loaderAuthReady = true;
         currentUser = user;
 
         if (!user) {
@@ -1701,6 +1740,7 @@ function initBackend() {
 
         adminSignInAttempted = false;
         updateAdminUi();
+        tryHideLoader();
     });
 }
 
@@ -1750,13 +1790,17 @@ function isUiOverlayTarget(target) {
     );
 }
 
+function hasClosest(target, selector) {
+    return Boolean(target && typeof target.closest === "function" && target.closest(selector));
+}
+
 document.addEventListener("mousedown", (e) => {
-    if (!e.target.closest(".node-container")
-        && !e.target.closest("#home-btn")
-        && !e.target.closest("#admin-btn")
-        && !e.target.closest("#reset-tree-btn")
-        && !e.target.closest("#share-btn")
-        && !e.target.closest("#admin-panel")
+    if (!hasClosest(e.target, ".node-container")
+        && !hasClosest(e.target, "#home-btn")
+        && !hasClosest(e.target, "#admin-btn")
+        && !hasClosest(e.target, "#reset-tree-btn")
+        && !hasClosest(e.target, "#share-btn")
+        && !hasClosest(e.target, "#admin-panel")
         && !isUiOverlayTarget(e.target)) {
         handleDown(e.clientX, e.clientY);
     }
@@ -1781,10 +1825,10 @@ document.addEventListener("touchstart", (e) => {
     }
 
     if (e.touches.length === 1
-        && !e.target.closest(".node-container")
-        && !e.target.closest("#admin-panel")
-        && !e.target.closest("#reset-tree-btn")
-        && !e.target.closest("#share-btn")
+        && !hasClosest(e.target, ".node-container")
+        && !hasClosest(e.target, "#admin-panel")
+        && !hasClosest(e.target, "#reset-tree-btn")
+        && !hasClosest(e.target, "#share-btn")
         && !isUiOverlayTarget(e.target)) {
         handleDown(e.touches[0].clientX, e.touches[0].clientY);
     }
@@ -1845,7 +1889,11 @@ document.addEventListener("wheel", (e) => {
     updateTransform();
 }, { passive: false });
 
-window.onload = () => {
+document.addEventListener("DOMContentLoaded", () => {
+    if (document.body) {
+        document.body.classList.add("loading");
+    }
+
     bindStaticUiEvents();
     initSearchInput();
     initSidebarContent();
@@ -1860,13 +1908,15 @@ window.onload = () => {
     initBackend();
     updateAdminUi();
     renderPendingList();
-};
+    loaderUiReady = true;
+    tryHideLoader();
+});
 
-window.onresize = () => {
+window.addEventListener("resize", () => {
     syncSearchPanelState();
     render();
     resetView();
-};
+});
 
 function openBioModal(memberId) {
     const node = familyData.find((n) => n.id === memberId);
