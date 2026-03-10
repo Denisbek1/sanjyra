@@ -205,10 +205,8 @@ let drawConnectionsRaf = null;
 let treeCardsReady = false;
 let treeCenteredReady = false;
 let firstConnectionsDrawDone = false;
-let treePhotosReady = false;
-let treeConnectionsReady = false;
-let treeReady = false;
-let treeRenderVersion = 0;
+let loaderRenderDone = false;
+let loaderConnectionsDone = false;
 const LOADER_MIN_VISIBLE_MS = 3000;
 const LOADER_MAX_WAIT_MS = 20000;
 
@@ -302,7 +300,11 @@ function hideLoaderWithMinDelay(force = false) {
 }
 
 function tryHideLoader() {
-    const ready = loaderUiReady && loaderDataReady && (!backendEnabled || loaderAuthReady) && treeReady;
+    const ready = loaderUiReady
+        && loaderDataReady
+        && (!backendEnabled || loaderAuthReady)
+        && loaderRenderDone
+        && loaderConnectionsDone;
     if (!ready) return;
     setLoaderProgress(100);
     hideLoaderWithMinDelay(false);
@@ -1218,50 +1220,6 @@ function canDrawConnections() {
     return treeCardsReady && treeCenteredReady;
 }
 
-function updateTreeReadyState() {
-    treeReady = treeCardsReady && treePhotosReady && treeConnectionsReady;
-    if (treeReady) {
-        tryHideLoader();
-    }
-}
-
-function trackTreeImagesReady(renderVersion) {
-    const nodesLayer = document.getElementById("nodes-layer");
-    if (!nodesLayer) {
-        treePhotosReady = true;
-        updateTreeReadyState();
-        return;
-    }
-
-    const images = Array.from(nodesLayer.querySelectorAll("img"));
-    if (images.length === 0) {
-        treePhotosReady = true;
-        updateTreeReadyState();
-        return;
-    }
-
-    let pending = 0;
-    const onDone = () => {
-        if (renderVersion !== treeRenderVersion) return;
-        pending -= 1;
-        if (pending > 0) return;
-        treePhotosReady = true;
-        updateTreeReadyState();
-    };
-
-    images.forEach((img) => {
-        if (img.complete) return;
-        pending += 1;
-        img.addEventListener("load", onDone, { once: true });
-        img.addEventListener("error", onDone, { once: true });
-    });
-
-    if (pending === 0) {
-        treePhotosReady = true;
-        updateTreeReadyState();
-    }
-}
-
 function runDrawConnectionsFrame() {
     if (!canDrawConnections()) return;
     if (drawConnectionsRaf) {
@@ -1338,17 +1296,9 @@ function drawConnections() {
         }
     }
 
-    treeConnectionsReady = true;
-    updateTreeReadyState();
 }
 
 function render() {
-    treeRenderVersion += 1;
-    const currentRenderVersion = treeRenderVersion;
-    treeReady = false;
-    treePhotosReady = false;
-    treeConnectionsReady = false;
-
     const searchContext = buildSearchContext();
     const { nodeWidth, ancestryGap } = getTreeMetrics();
     layout("root", 0, 0, searchContext);
@@ -1524,10 +1474,18 @@ function render() {
     });
 
     treeCardsReady = true;
-    updateTreeReadyState();
-    trackTreeImagesReady(currentRenderVersion);
+    if (!loaderHidden) {
+        loaderRenderDone = true;
+    }
     updateTransform();
     scheduleDrawConnections({ initial: !firstConnectionsDrawDone });
+    requestAnimationFrame(() => {
+        drawConnections();
+        if (!loaderHidden) {
+            loaderConnectionsDone = true;
+            tryHideLoader();
+        }
+    });
     renderSearchResults();
 }
 
@@ -2010,6 +1968,8 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.classList.add("loading");
     }
     setLoaderProgress(0, true);
+    loaderRenderDone = false;
+    loaderConnectionsDone = false;
     loaderStartedAt = Date.now();
     startLoaderMaxWaitTimer();
 
