@@ -774,9 +774,31 @@ function getGenderPhoto(name) {
     return malePhoto;
 }
 
+function formatNameWithSuffix(name) {
+    const safeName = String(name || "").trim();
+    if (!safeName) return "Бул адамга";
+
+    const lower = safeName.toLowerCase();
+    const vowels = ["а", "е", "и", "о", "у", "ы", "ө", "ү", "э", "ё", "ю", "я"];
+    let lastVowel = "";
+
+    for (let i = lower.length - 1; i >= 0; i -= 1) {
+        const ch = lower[i];
+        if (vowels.includes(ch)) {
+            lastVowel = ch;
+            break;
+        }
+    }
+
+    if (["а", "о", "у", "ы"].includes(lastVowel)) return `${safeName}го`;
+    if (["ө", "ү"].includes(lastVowel)) return `${safeName}гө`;
+    if (["е", "и", "э", "ё"].includes(lastVowel)) return `${safeName}ге`;
+    return `${safeName}го`;
+}
+
 function openModal(parentId) {
     const parent = familyData.find((n) => n.id === parentId);
-    const parentName = parent ? parent.name : "Бул адамга";
+    const parentName = formatNameWithSuffix(parent ? parent.name : "");
     currentParentId = parentId;
     const overlay = document.getElementById("modal-overlay");
     const titleEl = document.getElementById("member-modal-title");
@@ -789,7 +811,7 @@ function openModal(parentId) {
     if (!overlay || !titleEl || !saveBtn || !nameInput || !dateInput || !genderInput || !bioInput || !bioGroup) return;
 
     overlay.style.display = "flex";
-    titleEl.textContent = `${parentName}га кошосузбу?`;
+    titleEl.textContent = `${parentName} кошосузбу?`;
     saveBtn.textContent = "Сактоо";
     memberModalMode = "add";
     editMemberId = null;
@@ -824,8 +846,10 @@ function buildPendingPayload(name, date, gender, bio, parentId) {
     const parent = familyData.find((node) => node.id === parentId);
     return {
         name,
+        year: date,
         bdate: date,
         gender,
+        status: "pending",
         bio,
         branchColor: parent ? (parent.branchColor || "") : "",
         parentId,
@@ -878,8 +902,11 @@ async function saveNewMember() {
 
     try {
         if (backendEnabled) {
-            showNotice("Сизде Firebase'ге жазуу укугу жок. Окуу режими гана жеткиликтүү.", "error");
-            return;
+            await db.collection("pending_members").add({
+                ...pendingPayload,
+                status: "pending",
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
         } else {
             pendingLocal.push({ id: "local_" + Date.now(), ...pendingPayload });
             saveLocalJson(PENDING_STORAGE_KEY, pendingLocal);
@@ -1485,7 +1512,8 @@ function renderPendingList(itemsFromBackend) {
                 <strong>${item.name || ""}</strong>
                 <span class="pending-target-chip">Кошулат: ${getParentDisplayName(item.parentId, item.parentName)}</span>
             </div>
-            <div class="pending-meta">Туулган жылы: ${item.bdate || "-"}</div>
+            <div class="pending-meta">Туулган жылы: ${item.year || item.bdate || "-"}</div>
+            <div class="pending-meta">Статус: ${item.status || "pending"}</div>
             <div class="pending-meta">Parent ID: ${item.parentId || "-"}</div>
             <div class="pending-meta">Заявка ID: ${item.id}</div>
             <div class="pending-actions">
@@ -1561,7 +1589,10 @@ async function approvePending(id) {
             const approvedNode = makeApprovedNodeFromPending({ id, ...snap.data() });
             const batch = db.batch();
             batch.set(db.collection("approved_members").doc(approvedNode.id), approvedNode);
-            batch.delete(ref);
+            batch.update(ref, {
+                status: "approved",
+                approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
             await batch.commit();
         } catch (error) {
             showNotice("Approve болбой калды.", "error");
@@ -1605,7 +1636,10 @@ function startPendingSubscription() {
         .orderBy("createdAt", "desc")
         .onSnapshot((snapshot) => {
             const pending = [];
-            snapshot.forEach((doc) => pending.push({ id: doc.id, ...doc.data() }));
+            snapshot.forEach((doc) => {
+                const item = { id: doc.id, ...doc.data() };
+                if ((item.status || "pending") === "pending") pending.push(item);
+            });
             renderPendingList(pending);
         });
 }

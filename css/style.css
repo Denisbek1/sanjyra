@@ -1030,6 +1030,10 @@ button i {
     backdrop-filter: blur(4px);
 }
 .modal-content {
+    position: fixed;
+    top: 35%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     background: #1c2128;
     padding: 10px;
     border-radius: 20px;
@@ -1037,7 +1041,6 @@ button i {
     width: min(360px, calc(100vw - 24px));
     max-height: min(86vh, 620px);
     overflow-y: auto;
-    margin-top: -6vh;
     box-shadow: 0 15px 40px rgba(0,0,0,0.8);
     animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
@@ -1837,7 +1840,7 @@ textarea:focus { border-color: var(--accent-gold); }
         max-height: 82vh;
         padding: 10px;
         border-radius: 16px;
-        margin-top: -5vh;
+        top: 36%;
     }
 
     #mobile-sidebar {
