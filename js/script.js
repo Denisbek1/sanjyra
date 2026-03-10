@@ -199,6 +199,7 @@ let loaderHidden = false;
 let loaderProgress = 0;
 let loaderTargetProgress = 0;
 let loaderProgressTimer = null;
+let drawConnectionsRaf = null;
 
 const appConfig = window.APP_CONFIG || {};
 const adminUids = Array.isArray(appConfig.adminUids) ? appConfig.adminUids : [];
@@ -292,6 +293,21 @@ function applyFixedNames(list) {
         if (node.id === "el" && !node.partner) node.partner = "Абдыбек";
         if (node.id === "ma" && !node.partner) node.partner = "Улан";
     });
+}
+
+function applyInitialTreeExpansionState(list) {
+    if (!Array.isArray(list) || !list.length) return;
+
+    list.forEach((node) => {
+        node.expanded = false;
+    });
+
+    const rootNode = list.find((node) => node.id === "root");
+    if (rootNode) rootNode.expanded = true;
+
+    // Explicit requirement: Чынара branch must stay closed by default.
+    const chynaraNode = list.find((node) => node.id === "ch");
+    if (chynaraNode) chynaraNode.expanded = false;
 }
 
 function getDefaultBio(node) {
@@ -573,10 +589,11 @@ function centerViewOnExpandedChildren(node, options = {}) {
     if (!node) return;
     const {
         animate = false,
-        duration = VIEWPORT_ANIMATION_MS
+        duration = VIEWPORT_ANIMATION_MS,
+        allowZoomIn = false
     } = options;
 
-    const directChildren = getTreeChildren(node.id, null);
+    const directChildren = getTreeChildren(node.id, null).filter((child) => isVisible(child, null));
     if (!directChildren.length) {
         centerViewOnNode(node, { animate, duration });
         return;
@@ -608,7 +625,8 @@ function centerViewOnExpandedChildren(node, options = {}) {
     const maxScale = window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT ? 2.2 : 3;
     const fitScale = Math.min(viewportWidth / targetBranchWidth, viewportHeight / targetBranchHeight);
 
-    scale = Math.min(Math.max(Math.min(scale, fitScale), 0.1), maxScale);
+    const nextScale = allowZoomIn ? fitScale : Math.min(scale, fitScale);
+    scale = Math.min(Math.max(nextScale, 0.1), maxScale);
 
     const branchCenterX = left + (targetBranchWidth / 2);
     const branchCenterY = top + (targetBranchHeight / 2);
@@ -632,7 +650,8 @@ function centerOnRootPerson(options = {}) {
     const {
         animate = true,
         duration = VIEWPORT_ANIMATION_MS,
-        scaleOverride = null
+        scaleOverride = null,
+        includeChildren = true
     } = options;
 
     const rootNode = familyData.find((node) => node.name === "Абдраман") || familyData.find((node) => node.id === "root");
@@ -643,14 +662,22 @@ function centerOnRootPerson(options = {}) {
         scale = Math.min(Math.max(scaleOverride, 0.1), maxScale);
     }
 
+    if (includeChildren) {
+        centerViewOnExpandedChildren(rootNode, {
+            animate,
+            duration,
+            allowZoomIn: !(typeof scaleOverride === "number" && Number.isFinite(scaleOverride))
+        });
+        return;
+    }
+
     centerViewOnNode(rootNode, { animate, duration });
 }
 
 function focusInitialNode() {
     centerOnRootPerson({
         animate: true,
-        duration: VIEWPORT_ANIMATION_MS,
-        scaleOverride: Math.min(Math.max(INITIAL_FOCUS_SCALE, 1.5), 2.4)
+        duration: VIEWPORT_ANIMATION_MS
     });
 }
 
@@ -830,6 +857,7 @@ function loadInitialLocalData() {
     } else {
         familyData = seedData.map(normalizeNode);
     }
+    applyInitialTreeExpansionState(familyData);
     ensureBranchColors(familyData);
     applyFixedNames(familyData);
 }
@@ -1258,6 +1286,60 @@ function getEdgeSourceY(parentNode, childNodeId, searchContext) {
     return start + step * index;
 }
 
+function scheduleDrawConnections() {
+    if (drawConnectionsRaf) {
+        cancelAnimationFrame(drawConnectionsRaf);
+    }
+    drawConnectionsRaf = requestAnimationFrame(() => {
+        drawConnectionsRaf = null;
+        drawConnections();
+    });
+}
+
+function drawConnections() {
+    const svg = document.getElementById("tree-svg");
+    const nodesLayer = document.getElementById("nodes-layer");
+    if (!svg || !nodesLayer) return;
+    svg.innerHTML = "";
+
+    const searchContext = buildSearchContext();
+    const nodeElements = nodesLayer.querySelectorAll(".node-container.person-card[data-node-id]");
+    const nodeElementMap = new Map();
+    nodeElements.forEach((el) => {
+        const id = el.dataset.nodeId;
+        if (id) nodeElementMap.set(id, el);
+    });
+
+    familyData.forEach((node) => {
+        if (!isVisible(node, searchContext)) return;
+        if (!node.parentId) return;
+
+        const parentNode = familyData.find((candidate) => candidate.id === node.parentId);
+        if (!parentNode || !isNodeExpanded(parentNode, searchContext)) return;
+
+        const parentEl = nodeElementMap.get(parentNode.id);
+        const childEl = nodeElementMap.get(node.id);
+        if (!parentEl || !childEl) return;
+
+        const x1 = parentEl.offsetLeft + parentEl.offsetWidth;
+        const y1 = parentEl.offsetTop + (parentEl.offsetHeight / 2);
+        const x2 = childEl.offsetLeft;
+        const y2 = childEl.offsetTop + (childEl.offsetHeight / 2);
+        appendConnector(svg, x1, y1, x2, y2, node.branchColor);
+    });
+
+    if (!searchContext) {
+        const rootEl = nodeElementMap.get("root");
+        const ancestryEl = nodesLayer.querySelector(".node-ancestry-card");
+        if (rootEl && ancestryEl) {
+            const x1 = ancestryEl.offsetLeft + ancestryEl.offsetWidth;
+            const x2 = rootEl.offsetLeft;
+            const y = rootEl.offsetTop + (rootEl.offsetHeight / 2);
+            appendAncestryBridge(svg, x1, y, x2);
+        }
+    }
+}
+
 function render() {
     const searchContext = buildSearchContext();
     const { nodeWidth, ancestryGap } = getTreeMetrics();
@@ -1280,20 +1362,6 @@ function render() {
     familyData.forEach((n) => {
         if (!isVisible(n, searchContext)) return;
 
-        if (n.parentId) {
-            const p = familyData.find(x => x.id === n.parentId);
-
-            if (p && isNodeExpanded(p, searchContext)) {
-                const x1 = p.x + getNodeWidth(p);
-                const y1 = getEdgeSourceY(p, n.id, searchContext);
-
-                const x2 = n.x;
-                const y2 = n.y + (getNodeHeight(n) / 2);
-
-                appendConnector(svg, x1, y1, x2, y2, n.branchColor);
-            }
-        }
-
         const isRootCard = n.id === "root";
         const isRootChild = n.parentId === "root";
         const isCompactDescendant = !isRootCard && !isRootChild;
@@ -1305,6 +1373,7 @@ function render() {
         el.style.height = getNodeHeight(n) + "px";
         el.style.setProperty("--branch-color", n.branchColor || "transparent");
         el.dataset.personName = n.name || "";
+        el.dataset.nodeId = n.id;
 
         const bDateStr = n.bdate ? `${n.bdate}-жыл` : "";
         const mainPhoto = n.id === "root"
@@ -1405,8 +1474,6 @@ function render() {
             const ancestryX = n.x - (nodeWidth + ancestryGap);
             const ancestryY = n.y;
 
-            appendAncestryBridge(svg, ancestryX + nodeWidth, ancestryY + (getNodeHeight(n) / 2), n.x);
-
             const ancestryEl = document.createElement("div");
             ancestryEl.className = "node-container node-ancestry-card";
             ancestryEl.style.left = ancestryX + "px";
@@ -1453,6 +1520,7 @@ function render() {
     });
 
     updateTransform();
+    scheduleDrawConnections();
     renderSearchResults();
 }
 
@@ -1467,8 +1535,7 @@ function isVisible(node, searchContext) {
 function resetView() {
     centerOnRootPerson({
         animate: true,
-        duration: 460,
-        scaleOverride: isMobileLayout() ? 1.02 : 0.9
+        duration: 460
     });
 }
 
@@ -1493,11 +1560,9 @@ function resetTree() {
 
     if (!backendEnabled) persistApprovedLocal();
     render();
-    // Slightly wider framing than Home so all 10 sons fit comfortably.
     centerOnRootPerson({
         animate: true,
-        duration: 460,
-        scaleOverride: isMobileLayout() ? 0.96 : 0.88
+        duration: 460
     });
 }
 
@@ -1505,6 +1570,7 @@ function updateTransform() {
     const treeContainer = document.getElementById("tree-container");
     if (!treeContainer) return;
     treeContainer.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+    scheduleDrawConnections();
 }
 
 function toggleAdminPanel() {
@@ -1725,6 +1791,9 @@ function startApprovedSubscription() {
         const map = new Map(seedData.map((node) => [node.id, normalizeNode(node)]));
         remote.forEach((node) => map.set(node.id, normalizeNode(node)));
         familyData = Array.from(map.values());
+        if (!loaderDataReady) {
+            applyInitialTreeExpansionState(familyData);
+        }
         ensureBranchColors(familyData);
         applyFixedNames(familyData);
         render();
@@ -1950,8 +2019,7 @@ document.addEventListener("DOMContentLoaded", () => {
     render();
     centerOnRootPerson({
         animate: true,
-        duration: VIEWPORT_ANIMATION_MS,
-        scaleOverride: Math.min(Math.max(INITIAL_FOCUS_SCALE, 1.5), 2.4)
+        duration: VIEWPORT_ANIMATION_MS
     });
     setLoaderProgress(30);
     initBackend();
@@ -1966,6 +2034,10 @@ window.addEventListener("resize", () => {
     syncSearchPanelState();
     render();
     resetView();
+});
+
+window.addEventListener("resize", () => {
+    scheduleDrawConnections();
 });
 
 function openBioModal(memberId) {
