@@ -2096,7 +2096,7 @@ window.addEventListener("resize", () => {
 });
 
 window.addEventListener("resize", () => {
-    scheduleDrawConnections();
+    redrawConnections();
 });
 
 function openBioModal(memberId) {
