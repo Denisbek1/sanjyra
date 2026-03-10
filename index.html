@@ -19,44 +19,44 @@
     <meta name="twitter:description" content="Ата-бабанын тарыхын сактаган үй-бүлөлүк санжыра">
     <meta name="twitter:image" content="https://abdraman.pages.dev/assets/preview.jpg">
     <link rel="canonical" href="https://abdraman.pages.dev">
-    <link rel="icon" type="image/png" href="assets/sanjyra-icon.png">
+    <link rel="icon" href="assets/favicon.ico">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body translate="no">
     <div class="top-bar">
-        <button id="mobile-menu-btn" class="menu-btn" onclick="openSidebar()" title="Меню" aria-label="Меню">☰</button>
+        <button id="mobile-menu-btn" class="menu-btn" title="Меню" aria-label="Меню">☰</button>
         <div id="top-search-bar">
             <div class="search-wrapper">
-                <img src="assets/sanjyra-icon.png" class="search-icon" alt="">
+                <img src="assets/sanjyra-icon.png" class="search-icon" alt="" loading="lazy">
                 <input id="personSearch" type="text" placeholder="Имя" aria-label="Поиск по имени" class="search-bar">
             </div>
             <div class="search-panel-actions">
-                <button id="search-close-btn" type="button" class="search-close-btn" onclick="closeSearchPanel()">✕ Жабуу</button>
+                <button id="search-close-btn" type="button" class="search-close-btn">✕ Жабуу</button>
             </div>
             <div id="search-results" class="search-results"></div>
         </div>
     </div>
-    <div id="home-btn" onclick="resetView()" title="Башына кайтуу">
+    <div id="home-btn" title="Башына кайтуу">
         <i class="fas fa-home"></i>
     </div>
-    <div id="reset-tree-btn" onclick="resetTree()" title="Reset Tree">
+    <div id="reset-tree-btn" title="Reset Tree">
         <i class="fas fa-undo"></i>
     </div>
-    <div id="share-btn" onclick="quickShareSite()" title="Бөлүшүү">
+    <div id="share-btn" title="Бөлүшүү">
         <i class="fas fa-share-nodes"></i>
     </div>
-    <div id="sidebar-overlay" onclick="if(event.target === this) closeSidebar()">
-        <aside id="mobile-sidebar" onclick="event.stopPropagation()">
+    <div id="sidebar-overlay">
+        <aside id="mobile-sidebar">
             <div class="sidebar-head">
                 <div class="sidebar-title">Меню</div>
-                <button class="sidebar-close" onclick="closeSidebar()" aria-label="Жабуу">&times;</button>
+                <button id="sidebar-close-btn" class="sidebar-close" aria-label="Жабуу">&times;</button>
             </div>
             <div class="sidebar-menu">
-                <button class="sidebar-item" onclick="openSidebarSection('goal')">1. Сайттын максаты</button>
-                <button class="sidebar-item" onclick="openSidebarSection('share')">2. Бөлүшүү</button>
-                <button class="sidebar-item" onclick="openSidebarSection('contact')">3. Байланыш</button>
+                <button id="sidebar-item-goal" class="sidebar-item">1. Сайттын максаты</button>
+                <button id="sidebar-item-share" class="sidebar-item">2. Бөлүшүү</button>
+                <button id="sidebar-item-contact" class="sidebar-item">3. Байланыш</button>
             </div>
             <div id="sidebar-content" class="sidebar-content">
                 <section id="sidebar-section-goal" class="sidebar-section">
@@ -90,7 +90,7 @@
                         <a id="share-whatsapp" class="sidebar-link-btn" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i>WhatsApp</a>
                         <a id="share-instagram" class="sidebar-link-btn" target="_blank" rel="noopener"><i class="fa-brands fa-instagram"></i>Instagram</a>
                         <a id="share-telegram" class="sidebar-link-btn" target="_blank" rel="noopener"><i class="fa-brands fa-telegram"></i>Telegram</a>
-                        <button class="sidebar-link-btn" onclick="copySiteLink()"><i class="fa-solid fa-link"></i>Ссылка көчүрүү</button>
+                        <button id="copy-site-link-btn" class="sidebar-link-btn"><i class="fa-solid fa-link"></i>Ссылка көчүрүү</button>
                     </div>
                 </section>
                 <section id="sidebar-section-contact" class="sidebar-section">
@@ -99,22 +99,22 @@
                     <div class="contact-buttons">
                         <a id="contact-whatsapp" class="sidebar-link-btn" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i>WhatsApp</a>
                         <a id="contact-telegram" class="sidebar-link-btn" target="_blank" rel="noopener"><i class="fa-brands fa-telegram"></i>Telegram</a>
-                        <button class="sidebar-link-btn" onclick="adminSignIn()"><i class="fa-solid fa-user"></i>Админ</button>
+                        <button id="admin-signin-btn" class="sidebar-link-btn"><i class="fa-solid fa-user"></i>Админ</button>
                     </div>
                     <div id="admin-auth-block"></div>
                     <div id="admin-user-line" class="admin-user-line"></div>
                     <div id="pending-list" class="pending-list"></div>
-                    <button id="admin-logout-btn" class="btn-save bg-gray-600 text-white" onclick="adminSignOut()">Чыгуу</button>
+                    <button id="admin-logout-btn" class="btn-save bg-gray-600 text-white">Чыгуу</button>
                 </section>
             </div>
         </aside>
     </div>
 
-    <div id="modal-overlay" onclick="if(event.target === this) closeModal()">
-        <div class="modal-content" onclick="event.stopPropagation()">
+    <div id="modal-overlay">
+        <div id="member-modal-content" class="modal-content">
             <h2 id="member-modal-title" class="text-lg font-bold mb-3 text-center text-white">Добавить человека</h2>
             <input type="text" id="new-name" placeholder="Имя">
-            <input type="text" id="new-date" placeholder="Дата рождения" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+            <input type="text" id="new-date" placeholder="Дата рождения" maxlength="4">
             <div class="gender-label">Пол</div>
             <select id="new-gender" class="gender-select">
                 <option value="male">эркек</option>
@@ -125,33 +125,21 @@
                 <textarea id="new-bio" class="member-bio-input" placeholder="Өмүр баян ушул жерге жазылат"></textarea>
             </div>
             <div class="flex gap-2">
-                <button id="member-modal-save-btn" class="btn-save" onclick="saveMemberAction()">Сактоо</button>
-                <button class="btn-save bg-gray-600 text-white" onclick="closeModal()">Жок</button>
+                <button id="member-modal-save-btn" class="btn-save">Сактоо</button>
+                <button id="member-modal-cancel-btn" class="btn-save bg-gray-600 text-white">Жок</button>
             </div>
         </div>
     </div>
 
-    <div id="admin-pass-overlay" onclick="if(event.target === this) closeAdminPasswordModal(false)">
-        <div class="admin-pass-modal" onclick="event.stopPropagation()">
-            <h2 class="admin-pass-title">Админ кирүү</h2>
-            <p class="admin-pass-text">Админ болуп кирүү үчүн пароль жазыңыз:</p>
-            <input type="password" id="admin-password-input" placeholder="Пароль">
-            <div class="admin-pass-actions">
-                <button class="btn-save" onclick="submitAdminPassword()">Улантуу</button>
-                <button class="btn-save bg-gray-600 text-white" onclick="closeAdminPasswordModal(false)">Жокко чыгаруу</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="bio-overlay" onclick="if(event.target === this) closeBioModal()">
-        <div class="bio-modal" onclick="event.stopPropagation()">
+    <div id="bio-overlay">
+        <div id="bio-modal-shell" class="bio-modal">
             <div class="bio-modal-head">
                 <h2 id="bio-modal-title" class="bio-title">Абдраман</h2>
-                <button class="bio-close" onclick="closeBioModal()" aria-label="Жабуу">&times;</button>
+                <button id="bio-close-btn" class="bio-close" aria-label="Жабуу">&times;</button>
                 <div id="bio-modal-subtitle" class="bio-subtitle"></div>
             </div>
             <div class="bio-modal-body">
-                <img id="bio-modal-photo" class="bio-photo" src="" alt="">
+                <img id="bio-modal-photo" class="bio-photo" src="" alt="" loading="lazy">
                 <div class="bio-section-title">Өмүр баяны</div>
                 <div id="bio-modal-structured" class="biography-section" aria-live="polite"></div>
                 <p id="bio-modal-text" class="bio-text"></p>
@@ -169,6 +157,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
     <script src="app-config.js"></script>
-    <script src="script.js"></script>
+    <script src="js/script.js"></script>
 </body>
 </html>

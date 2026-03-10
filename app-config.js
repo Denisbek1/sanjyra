@@ -10,6 +10,4 @@ window.APP_CONFIG = {
   },
 
   adminUids: ["IuQps9fJupMPW4a7aeNSLQDr52m2"],
-
-  localAdminPassword: "1234"
 };

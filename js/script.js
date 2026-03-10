@@ -187,7 +187,6 @@ let db = null;
 let auth = null;
 let pendingUnsubscribe = null;
 let noticeTimer = null;
-let adminPasswordResolver = null;
 let memberModalMode = "add";
 let editMemberId = null;
 
@@ -372,6 +371,90 @@ function closeSearchPanel() {
     if (!rootNode) return;
 }
 
+function bindStaticUiEvents() {
+    const mobileMenuBtn = document.getElementById("mobile-menu-btn");
+    if (mobileMenuBtn) mobileMenuBtn.addEventListener("click", openSidebar);
+
+    const searchCloseBtn = document.getElementById("search-close-btn");
+    if (searchCloseBtn) searchCloseBtn.addEventListener("click", closeSearchPanel);
+
+    const homeBtn = document.getElementById("home-btn");
+    if (homeBtn) homeBtn.addEventListener("click", resetView);
+
+    const resetTreeBtn = document.getElementById("reset-tree-btn");
+    if (resetTreeBtn) resetTreeBtn.addEventListener("click", resetTree);
+
+    const shareBtn = document.getElementById("share-btn");
+    if (shareBtn) shareBtn.addEventListener("click", quickShareSite);
+
+    const sidebarOverlay = document.getElementById("sidebar-overlay");
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener("click", (event) => {
+            if (event.target === sidebarOverlay) closeSidebar();
+        });
+    }
+
+    const mobileSidebar = document.getElementById("mobile-sidebar");
+    if (mobileSidebar) mobileSidebar.addEventListener("click", (event) => event.stopPropagation());
+
+    const sidebarCloseBtn = document.getElementById("sidebar-close-btn");
+    if (sidebarCloseBtn) sidebarCloseBtn.addEventListener("click", closeSidebar);
+
+    const sidebarItemGoal = document.getElementById("sidebar-item-goal");
+    if (sidebarItemGoal) sidebarItemGoal.addEventListener("click", () => openSidebarSection("goal"));
+
+    const sidebarItemShare = document.getElementById("sidebar-item-share");
+    if (sidebarItemShare) sidebarItemShare.addEventListener("click", () => openSidebarSection("share"));
+
+    const sidebarItemContact = document.getElementById("sidebar-item-contact");
+    if (sidebarItemContact) sidebarItemContact.addEventListener("click", () => openSidebarSection("contact"));
+
+    const copySiteLinkBtn = document.getElementById("copy-site-link-btn");
+    if (copySiteLinkBtn) copySiteLinkBtn.addEventListener("click", copySiteLink);
+
+    const adminSignInBtn = document.getElementById("admin-signin-btn");
+    if (adminSignInBtn) adminSignInBtn.addEventListener("click", adminSignIn);
+
+    const adminLogoutBtn = document.getElementById("admin-logout-btn");
+    if (adminLogoutBtn) adminLogoutBtn.addEventListener("click", adminSignOut);
+
+    const modalOverlay = document.getElementById("modal-overlay");
+    if (modalOverlay) {
+        modalOverlay.addEventListener("click", (event) => {
+            if (event.target === modalOverlay) closeModal();
+        });
+    }
+
+    const memberModalContent = document.getElementById("member-modal-content");
+    if (memberModalContent) memberModalContent.addEventListener("click", (event) => event.stopPropagation());
+
+    const memberModalSaveBtn = document.getElementById("member-modal-save-btn");
+    if (memberModalSaveBtn) memberModalSaveBtn.addEventListener("click", saveMemberAction);
+
+    const memberModalCancelBtn = document.getElementById("member-modal-cancel-btn");
+    if (memberModalCancelBtn) memberModalCancelBtn.addEventListener("click", closeModal);
+
+    const newDateInput = document.getElementById("new-date");
+    if (newDateInput) {
+        newDateInput.addEventListener("input", () => {
+            newDateInput.value = newDateInput.value.replace(/[^0-9]/g, "");
+        });
+    }
+
+    const bioOverlay = document.getElementById("bio-overlay");
+    if (bioOverlay) {
+        bioOverlay.addEventListener("click", (event) => {
+            if (event.target === bioOverlay) closeBioModal();
+        });
+    }
+
+    const bioModalShell = document.getElementById("bio-modal-shell");
+    if (bioModalShell) bioModalShell.addEventListener("click", (event) => event.stopPropagation());
+
+    const bioCloseBtn = document.getElementById("bio-close-btn");
+    if (bioCloseBtn) bioCloseBtn.addEventListener("click", closeBioModal);
+}
+
 function getViewportTargetCenter() {
     const targetCenterX = window.innerWidth / 2;
     const topInset = getSearchPanelHeight();
@@ -498,7 +581,8 @@ function openSidebar() {
     const overlay = document.getElementById("sidebar-overlay");
     if (!overlay) return;
     overlay.classList.add("is-open");
-    if (!document.querySelector(".sidebar-section.is-active")) {
+    const activeSection = document.querySelector(".sidebar-section.is-active");
+    if (!activeSection) {
         openSidebarSection("goal");
     }
 }
@@ -582,41 +666,12 @@ function showNotice(message, type = "info") {
         }, 180);
     };
 
-    card.querySelector(".notice-close").addEventListener("click", close);
+    const closeBtn = card.querySelector(".notice-close");
+    if (closeBtn) closeBtn.addEventListener("click", close);
     host.appendChild(card);
 
     clearTimeout(noticeTimer);
     noticeTimer = setTimeout(close, type === "error" ? 6500 : 4500);
-}
-
-function openAdminPasswordModal() {
-    return new Promise((resolve) => {
-        adminPasswordResolver = resolve;
-        const overlay = document.getElementById("admin-pass-overlay");
-        const input = document.getElementById("admin-password-input");
-        if (!overlay || !input) {
-            resolve(null);
-            return;
-        }
-        input.value = "";
-        overlay.style.display = "flex";
-        setTimeout(() => input.focus(), 0);
-    });
-}
-
-function closeAdminPasswordModal(confirmed) {
-    const overlay = document.getElementById("admin-pass-overlay");
-    const input = document.getElementById("admin-password-input");
-    if (overlay) overlay.style.display = "none";
-    const value = confirmed && input ? input.value : null;
-    if (adminPasswordResolver) {
-        adminPasswordResolver(value);
-        adminPasswordResolver = null;
-    }
-}
-
-function submitAdminPassword() {
-    closeAdminPasswordModal(true);
 }
 
 function normalizeNode(raw) {
@@ -721,26 +776,44 @@ function openModal(parentId) {
     const parent = familyData.find((n) => n.id === parentId);
     const parentName = parent ? parent.name : "Бул адамга";
     currentParentId = parentId;
-    document.getElementById("modal-overlay").style.display = "flex";
-    document.getElementById("member-modal-title").textContent = `${parentName}га кошосузбу?`;
-    document.getElementById("member-modal-save-btn").textContent = "Сактоо";
+    const overlay = document.getElementById("modal-overlay");
+    const titleEl = document.getElementById("member-modal-title");
+    const saveBtn = document.getElementById("member-modal-save-btn");
+    const nameInput = document.getElementById("new-name");
+    const dateInput = document.getElementById("new-date");
+    const genderInput = document.getElementById("new-gender");
+    const bioInput = document.getElementById("new-bio");
+    const bioGroup = document.getElementById("member-bio-group");
+    if (!overlay || !titleEl || !saveBtn || !nameInput || !dateInput || !genderInput || !bioInput || !bioGroup) return;
+
+    overlay.style.display = "flex";
+    titleEl.textContent = `${parentName}га кошосузбу?`;
+    saveBtn.textContent = "Сактоо";
     memberModalMode = "add";
     editMemberId = null;
-    document.getElementById("new-name").value = "";
-    document.getElementById("new-date").value = "";
-    document.getElementById("new-name").focus();
-    document.getElementById("new-gender").value = "male";
-    document.getElementById("new-bio").value = "";
-    document.getElementById("member-bio-group").style.display = "none";
+    nameInput.value = "";
+    dateInput.value = "";
+    nameInput.focus();
+    genderInput.value = "male";
+    bioInput.value = "";
+    bioGroup.style.display = "none";
 }
 
 function closeModal() {
-    document.getElementById("modal-overlay").style.display = "none";
-    document.getElementById("new-name").value = "";
-    document.getElementById("new-date").value = "";
-    document.getElementById("new-gender").value = "male";
-    document.getElementById("new-bio").value = "";
-    document.getElementById("member-bio-group").style.display = "none";
+    const overlay = document.getElementById("modal-overlay");
+    const nameInput = document.getElementById("new-name");
+    const dateInput = document.getElementById("new-date");
+    const genderInput = document.getElementById("new-gender");
+    const bioInput = document.getElementById("new-bio");
+    const bioGroup = document.getElementById("member-bio-group");
+    if (!overlay || !nameInput || !dateInput || !genderInput || !bioInput || !bioGroup) return;
+
+    overlay.style.display = "none";
+    nameInput.value = "";
+    dateInput.value = "";
+    genderInput.value = "male";
+    bioInput.value = "";
+    bioGroup.style.display = "none";
     memberModalMode = "add";
     editMemberId = null;
 }
@@ -763,10 +836,16 @@ function buildPendingPayload(name, date, gender, bio, parentId) {
 }
 
 async function saveNewMember() {
-    const name = document.getElementById("new-name").value.trim();
-    const date = document.getElementById("new-date").value.trim();
-    const gender = document.getElementById("new-gender").value;
-    const bio = document.getElementById("new-bio").value.trim();
+    const nameInput = document.getElementById("new-name");
+    const dateInput = document.getElementById("new-date");
+    const genderInput = document.getElementById("new-gender");
+    const bioInput = document.getElementById("new-bio");
+    if (!nameInput || !dateInput || !genderInput || !bioInput) return;
+
+    const name = nameInput.value.trim();
+    const date = dateInput.value.trim();
+    const gender = genderInput.value;
+    const bio = bioInput.value.trim();
     if (!name) return;
 
     const pendingPayload = buildPendingPayload(name, date, gender, bio, currentParentId);
@@ -797,10 +876,8 @@ async function saveNewMember() {
 
     try {
         if (backendEnabled) {
-            await db.collection("pending_members").add({
-                ...pendingPayload,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
+            showNotice("Сизде Firebase'ге жазуу укугу жок. Окуу режими гана жеткиликтүү.", "error");
+            return;
         } else {
             pendingLocal.push({ id: "local_" + Date.now(), ...pendingPayload });
             saveLocalJson(PENDING_STORAGE_KEY, pendingLocal);
@@ -824,15 +901,25 @@ function openEditModal(memberId) {
     editMemberId = memberId;
     currentParentId = node.parentId;
 
-    document.getElementById("member-modal-title").textContent = "Адамды өзгөртүү";
-    document.getElementById("member-modal-save-btn").textContent = "Сактоо";
-    document.getElementById("new-name").value = node.name || "";
-    document.getElementById("new-date").value = node.bdate || "";
-    document.getElementById("new-gender").value = node.gender || "male";
-    document.getElementById("new-bio").value = node.bio || "";
-    document.getElementById("member-bio-group").style.display = canShowLifeStory(node) ? "block" : "none";
-    document.getElementById("modal-overlay").style.display = "flex";
-    document.getElementById("new-name").focus();
+    const titleEl = document.getElementById("member-modal-title");
+    const saveBtn = document.getElementById("member-modal-save-btn");
+    const nameInput = document.getElementById("new-name");
+    const dateInput = document.getElementById("new-date");
+    const genderInput = document.getElementById("new-gender");
+    const bioInput = document.getElementById("new-bio");
+    const bioGroup = document.getElementById("member-bio-group");
+    const overlay = document.getElementById("modal-overlay");
+    if (!titleEl || !saveBtn || !nameInput || !dateInput || !genderInput || !bioInput || !bioGroup || !overlay) return;
+
+    titleEl.textContent = "Адамды өзгөртүү";
+    saveBtn.textContent = "Сактоо";
+    nameInput.value = node.name || "";
+    dateInput.value = node.bdate || "";
+    genderInput.value = node.gender || "male";
+    bioInput.value = node.bio || "";
+    bioGroup.style.display = canShowLifeStory(node) ? "block" : "none";
+    overlay.style.display = "flex";
+    nameInput.focus();
 }
 
 async function saveEditMember() {
@@ -840,10 +927,16 @@ async function saveEditMember() {
     const node = familyData.find((n) => n.id === editMemberId);
     if (!node) return;
 
-    const name = document.getElementById("new-name").value.trim();
-    const date = document.getElementById("new-date").value.trim();
-    const gender = document.getElementById("new-gender").value;
-    const bio = canShowLifeStory(node) ? document.getElementById("new-bio").value.trim() : node.bio;
+    const nameInput = document.getElementById("new-name");
+    const dateInput = document.getElementById("new-date");
+    const genderInput = document.getElementById("new-gender");
+    const bioInput = document.getElementById("new-bio");
+    if (!nameInput || !dateInput || !genderInput || !bioInput) return;
+
+    const name = nameInput.value.trim();
+    const date = dateInput.value.trim();
+    const gender = genderInput.value;
+    const bio = canShowLifeStory(node) ? bioInput.value.trim() : node.bio;
     if (!name) return;
 
     node.name = name;
@@ -1153,7 +1246,7 @@ function render() {
         ` : "";
 
         el.innerHTML = `
-            <img src="${mainPhoto}" class="profile-img" />
+            <img src="${mainPhoto}" class="profile-img" loading="lazy" />
             <div class="node-main-content">
                 <div class="flex items-center mb-1">
                     <div class="name-text">${n.name}</div>
@@ -1207,7 +1300,7 @@ function render() {
             ancestryEl.innerHTML = ancestryExpanded ? `
                 <div class="ancestry-shell">
                     <div class="ancestry-head">
-                        <div class="ancestry-head-icon"><img src="assets/atatek.png" alt="Ата-тек"></div>
+                        <div class="ancestry-head-icon"><img src="assets/atatek.png" alt="Ата-тек" loading="lazy"></div>
                         <div class="ancestry-head-copy">
                             <div class="ancestry-head-title">Ата-тек жөнүндө</div>
                             <div class="ancestry-head-sub">Негизги муундардын тарыхы</div>
@@ -1226,7 +1319,7 @@ function render() {
             ` : `
                 <div class="ancestry-shell">
                     <div class="ancestry-head">
-                        <div class="ancestry-head-icon"><img src="assets/atatek.png" alt="Ата-тек"></div>
+                        <div class="ancestry-head-icon"><img src="assets/atatek.png" alt="Ата-тек" loading="lazy"></div>
                         <div class="ancestry-head-copy">
                             <div class="ancestry-head-title">Ата-тек</div>
                             <div class="ancestry-head-sub">Кеңири көрүү үчүн басыңыз</div>
@@ -1344,6 +1437,7 @@ function updateAdminUi() {
     const userLine = document.getElementById("admin-user-line");
     const logoutBtn = document.getElementById("admin-logout-btn");
     const pendingWrap = document.getElementById("pending-list");
+    if (!authBlock || !userLine || !logoutBtn || !pendingWrap) return;
 
     userLine.textContent = "";
     userLine.style.display = "none";
@@ -1401,48 +1495,40 @@ function renderPendingList(itemsFromBackend) {
 }
 
 async function adminSignIn() {
-    if (backendEnabled) {
-        try {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            await auth.signInWithPopup(provider);
-        } catch (error) {
-            const code = error && error.code ? error.code : "unknown_error";
-            if (code === "auth/operation-not-supported-in-this-environment") {
-                try {
-                    const provider = new firebase.auth.GoogleAuthProvider();
-                    await auth.signInWithRedirect(provider);
-                    return;
-                } catch (redirectError) {
-                    showNotice(`Кирүү иштебей калды: ${redirectError.code || code}`, "error");
-                    return;
-                }
-            }
-            showNotice(`Кирүү иштебей калды: ${code}`, "error");
-        }
+    if (!backendEnabled || !auth) {
+        showNotice("Firebase Auth жеткиликсиз. Админ кирүү өчүрүлгөн.", "error");
         return;
     }
 
-    const entered = await openAdminPasswordModal();
-    if (entered === null) return;
-    const expected = appConfig.localAdminPassword || "1234";
-    if (entered === expected) {
-        isAdmin = true;
-        updateAdminUi();
-        renderPendingList();
-    } else {
-        showNotice("Пароль туура эмес.", "error");
+    try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        await auth.signInWithPopup(provider);
+    } catch (error) {
+        const code = error && error.code ? error.code : "unknown_error";
+        if (code === "auth/operation-not-supported-in-this-environment") {
+            try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                await auth.signInWithRedirect(provider);
+                return;
+            } catch (redirectError) {
+                showNotice(`Кирүү иштебей калды: ${redirectError.code || code}`, "error");
+                return;
+            }
+        }
+        showNotice(`Кирүү иштебей калды: ${code}`, "error");
     }
 }
 
 async function adminSignOut() {
-    if (backendEnabled && auth) {
+    if (backendEnabled && auth && auth.currentUser) {
         await auth.signOut();
         return;
     }
 
     isAdmin = false;
+    currentUser = null;
     updateAdminUi();
-    renderPendingList();
+    renderPendingList([]);
 }
 
 function makeApprovedNodeFromPending(item) {
@@ -1600,7 +1686,6 @@ function isUiOverlayTarget(target) {
     if (!target || typeof target.closest !== "function") return false;
     return Boolean(
         target.closest(".modal-content")
-        || target.closest("#admin-pass-overlay")
         || target.closest("#bio-overlay")
         || target.closest(".bio-modal")
         || target.closest(".biography-section")
@@ -1682,6 +1767,7 @@ document.addEventListener("wheel", (e) => {
 }, { passive: false });
 
 window.onload = () => {
+    bindStaticUiEvents();
     initSearchInput();
     initSidebarContent();
     loadInitialLocalData();
@@ -1698,14 +1784,6 @@ window.onresize = () => {
     render();
     resetView();
 };
-
-document.addEventListener("keydown", (e) => {
-    if (e.key !== "Enter") return;
-    const overlay = document.getElementById("admin-pass-overlay");
-    if (overlay && overlay.style.display === "flex") {
-        submitAdminPassword();
-    }
-});
 
 function openBioModal(memberId) {
     const node = familyData.find((n) => n.id === memberId);
@@ -1741,7 +1819,9 @@ function openBioModal(memberId) {
         subtitleText = subtitleParts.join("\n");
     }
 
-    document.getElementById("bio-modal-title").textContent = node.name;
+    const titleEl = document.getElementById("bio-modal-title");
+    if (!titleEl) return;
+    titleEl.textContent = node.name;
     photoEl.style.display = isRootChild ? "none" : "block";
     if (!isRootChild) {
         photoEl.src = photo;
@@ -1810,8 +1890,6 @@ window.adminSignIn = adminSignIn;
 window.adminSignOut = adminSignOut;
 window.approvePending = approvePending;
 window.rejectPending = rejectPending;
-window.submitAdminPassword = submitAdminPassword;
-window.closeAdminPasswordModal = closeAdminPasswordModal;
 window.openEditModal = openEditModal;
 window.deleteMember = deleteMember;
 window.saveMemberAction = saveMemberAction;
