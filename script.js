@@ -85,7 +85,7 @@ const CONTACT_WHATSAPP_URL = "https://wa.me/79613745333";
 const CONTACT_TELEGRAM_URL = "https://t.me/Abdyramanov";
 const SITE_SHARE_TITLE = "Абдраман атанын санжырасы";
 const SITE_SHARE_TEXT = "Абдраман санжыра";
-const SITE_SHARE_URL = "https://abdramanov.netlify.app/?v=20260310c";
+const SITE_SHARE_URL = "https://abdramanov.netlify.app";
 const BRANCH_COLORS_BY_ROOT_CHILD_ID = {
     al: "#3b82f6",
     bu: "#ef4444",
