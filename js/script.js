@@ -196,22 +196,63 @@ let loaderUiReady = false;
 let loaderAuthReady = false;
 let loaderDataReady = false;
 let loaderHidden = false;
+let loaderProgress = 0;
+let loaderTargetProgress = 0;
+let loaderProgressTimer = null;
 
 const appConfig = window.APP_CONFIG || {};
 const adminUids = Array.isArray(appConfig.adminUids) ? appConfig.adminUids : [];
 
+function renderLoaderProgress() {
+    const progressEl = document.getElementById("loader-progress");
+    if (!progressEl) return;
+    progressEl.textContent = `${Math.round(loaderProgress)}%`;
+}
+
+function setLoaderProgress(value, immediate = false) {
+    const next = Math.max(0, Math.min(100, Number(value) || 0));
+    loaderTargetProgress = next;
+
+    if (immediate) {
+        loaderProgress = next;
+        renderLoaderProgress();
+        return;
+    }
+
+    if (loaderProgressTimer) return;
+    loaderProgressTimer = setInterval(() => {
+        if (loaderHidden) {
+            clearInterval(loaderProgressTimer);
+            loaderProgressTimer = null;
+            return;
+        }
+
+        if (loaderProgress >= loaderTargetProgress) {
+            clearInterval(loaderProgressTimer);
+            loaderProgressTimer = null;
+            return;
+        }
+
+        loaderProgress = Math.min(loaderTargetProgress, loaderProgress + 1);
+        renderLoaderProgress();
+    }, 16);
+}
+
 function hideLoader() {
     if (loaderHidden) return;
     loaderHidden = true;
+    setLoaderProgress(100, true);
 
     const loader = document.getElementById("app-loader");
     if (loader) {
-        loader.style.opacity = "0";
         setTimeout(() => {
-            if (loader && typeof loader.remove === "function") {
-                loader.remove();
-            }
-        }, 400);
+            loader.style.opacity = "0";
+            setTimeout(() => {
+                if (loader && typeof loader.remove === "function") {
+                    loader.remove();
+                }
+            }, 400);
+        }, 120);
     }
 
     if (document.body) {
@@ -1687,10 +1728,12 @@ function startApprovedSubscription() {
         ensureBranchColors(familyData);
         applyFixedNames(familyData);
         render();
+        setLoaderProgress(100);
         loaderDataReady = true;
         tryHideLoader();
     }, () => {
         // Keep app usable even when remote subscription fails.
+        setLoaderProgress(100);
         loaderDataReady = true;
         tryHideLoader();
     });
@@ -1700,6 +1743,7 @@ function initBackend() {
     if (!window.firebase || !appConfig.firebase) {
         backendEnabled = false;
         updateAdminUi();
+        setLoaderProgress(100);
         loaderAuthReady = true;
         loaderDataReady = true;
         tryHideLoader();
@@ -1707,13 +1751,16 @@ function initBackend() {
     }
 
     backendEnabled = true;
+    setLoaderProgress(45);
     const app = firebase.initializeApp(appConfig.firebase);
     db = app.firestore();
     auth = app.auth();
+    setLoaderProgress(60);
 
     startApprovedSubscription();
 
     auth.onAuthStateChanged((user) => {
+        setLoaderProgress(80);
         loaderAuthReady = true;
         currentUser = user;
 
@@ -1893,6 +1940,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (document.body) {
         document.body.classList.add("loading");
     }
+    setLoaderProgress(0, true);
 
     bindStaticUiEvents();
     initSearchInput();
@@ -1905,10 +1953,12 @@ document.addEventListener("DOMContentLoaded", () => {
         duration: VIEWPORT_ANIMATION_MS,
         scaleOverride: Math.min(Math.max(INITIAL_FOCUS_SCALE, 1.5), 2.4)
     });
+    setLoaderProgress(30);
     initBackend();
     updateAdminUi();
     renderPendingList();
     loaderUiReady = true;
+    setLoaderProgress(40);
     tryHideLoader();
 });
 
