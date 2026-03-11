@@ -77,8 +77,8 @@ const seedData = [
 ];
 
 // root avatar image – replace with your saved picture (PNG or WebP) in /assets/ folder
-// original file was abdraman.webp; if you have a PNG rename it to abdraman.png and update path here.
-const rootPhoto = "assets/abdraman.png"; // new avatar
+// previously used abdraman.png, now changed to avatar.png
+const rootPhoto = "assets/avatar.png"; // updated avatar filename
 const malePhoto = "assets/kalpak.webp";
 const femalePhoto = "assets/yal.webp";
 const SIDEBAR_SECTIONS = ["goal", "share", "contact"];
