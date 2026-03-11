@@ -78,8 +78,8 @@ const seedData = [
 
 // root avatar image – replace with your saved picture (PNG or WebP) in /assets/ folder
 // change the filename here whenever you drop a new image in the assets directory
-// for example the user now has a file named "prev.png", so update accordingly
-const rootPhoto = "assets/prev.png"; // update this path when avatar image changes (cache‑bust via renamed file)
+// the latest file is now `avatar.webp`, so point to that name
+const rootPhoto = "assets/avatar.webp"; // update this path when avatar image changes (cache‑bust via renamed file)
 
 const malePhoto = "assets/kalpak.webp";
 const femalePhoto = "assets/yal.webp";
