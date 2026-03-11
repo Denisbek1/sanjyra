@@ -76,8 +76,9 @@ const seedData = [
     { id: "an6", name: "Сауле", bdate: "2009", parentId: "an", expanded: false }
 ];
 
-// images optimized to WebP for faster loading
-const rootPhoto = "assets/abdraman.webp";
+// root avatar image – replace with your saved picture (PNG or WebP) in /assets/ folder
+// original file was abdraman.webp; if you have a PNG rename it to abdraman.png and update path here.
+const rootPhoto = "assets/abdraman.png"; // new avatar
 const malePhoto = "assets/kalpak.webp";
 const femalePhoto = "assets/yal.webp";
 const SIDEBAR_SECTIONS = ["goal", "share", "contact"];
@@ -190,7 +191,9 @@ let db = null;
 let auth = null;
 let authStateObserverAttached = false;
 let authStateUnsubscribe = null;
-let firebaseAuthScriptPromise = null;
+// Firebase lazy-load state
+let firebaseLoadPromise = null;
+let firebaseInitDone = false;
 let pendingUnsubscribe = null;
 let noticeTimer = null;
 let adminSignInAttempted = false;
@@ -218,7 +221,12 @@ let lastCardTouchToggleAt = 0;
 const LOADER_MIN_VISIBLE_MS = 2000;
 const LOADER_MAX_WAIT_MS = 10000;
 const IMAGE_PLACEHOLDER_SRC = "data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA=";
-const FIREBASE_AUTH_COMPAT_CDN = "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js";
+// constants for CDN files; we will insert them dynamically
+const FIREBASE_CDN_URLS = [
+    "https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js",
+    "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js",
+    "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js",
+];
 let photoObserver = null;
 
 const FULL_LINEAGE_MODAL_HTML = `
@@ -599,7 +607,13 @@ function bindStaticUiEvents() {
     if (copySiteLinkBtn) copySiteLinkBtn.addEventListener("click", copySiteLink);
 
     const adminSignInBtn = document.getElementById("admin-signin-btn");
-    if (adminSignInBtn) adminSignInBtn.addEventListener("click", adminSignIn);
+    if (adminSignInBtn) {
+        adminSignInBtn.addEventListener("click", async () => {
+            await loadFirebase();
+            // initBackend will have been triggered by loadFirebase
+            adminSignIn();
+        });
+    }
 
     const adminLogoutBtn = document.getElementById("admin-logout-btn");
     if (adminLogoutBtn) adminLogoutBtn.addEventListener("click", adminSignOut);
@@ -1044,7 +1058,9 @@ function getGenderPhoto(name) {
     return malePhoto;
 }
 
-function openModal(parentId) {
+async function openModal(parentId) {
+    // start loading Firebase immediately when user opens modal to add person
+    loadFirebase();
     const parent = familyData.find((n) => n.id === parentId);
     const parentName = parent ? String(parent.name || "").trim() : "";
     currentParentId = parentId;
@@ -1115,6 +1131,9 @@ function buildPendingPayload(name, date, gender, parentId) {
 }
 
 async function saveNewMember() {
+    // ensure firebase is available before attempting any backend write
+    await loadFirebase();
+
     const nameInput = document.getElementById("new-name");
     const dateInput = document.getElementById("new-date");
     const genderInput = document.getElementById("new-gender");
@@ -1933,6 +1952,9 @@ function renderPendingList(itemsFromBackend) {
 }
 
 async function adminSignIn() {
+    // make sure libs are loaded even if caller didn't wrap
+    await loadFirebase();
+
     if (!authEnabled || !auth) {
         showNotice("Firebase Auth жеткиликсиз. Админ кирүү өчүрүлгөн.", "error");
         return;
@@ -2383,7 +2405,8 @@ document.addEventListener("DOMContentLoaded", () => {
             duration: VIEWPORT_ANIMATION_MS
         });
         setLoaderProgress(30);
-        initBackend();
+        // do not initialize backend until firebase is explicitly requested
+        // initBackend();
         updateAdminUi();
         renderPendingList();
         loaderUiReady = true;
@@ -2402,6 +2425,33 @@ window.addEventListener("resize", () => {
     render();
     resetView();
 }, { passive: true });
+
+// lazy loader: inserts firebase scripts and initializes backend once
+function loadFirebase() {
+    if (firebaseLoadPromise) return firebaseLoadPromise;
+    firebaseLoadPromise = new Promise((resolve, reject) => {
+        let loaded = 0;
+        FIREBASE_CDN_URLS.forEach((url) => {
+            const s = document.createElement("script");
+            s.src = url;
+            s.defer = true;
+            s.onload = () => {
+                loaded += 1;
+                if (loaded === FIREBASE_CDN_URLS.length) {
+                    // after all libs are available, initialize
+                    if (!firebaseInitDone) {
+                        firebaseInitDone = true;
+                        initBackend();
+                    }
+                    resolve();
+                }
+            };
+            s.onerror = (e) => reject(new Error("Failed to load " + url));
+            document.head.appendChild(s);
+        });
+    });
+    return firebaseLoadPromise;
+}
 
 window.addEventListener("resize", () => {
     redrawConnections();
