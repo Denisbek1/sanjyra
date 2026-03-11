@@ -212,7 +212,8 @@ let loaderRenderDone = false;
 let loaderConnectionsDone = false;
 const nodeZoomMemory = new Map();
 let lastCardTouchToggleAt = 0;
-const LOADER_MIN_VISIBLE_MS = 3000;
+// loader should disappear as soon as the UI is painted; no artificial 3‑second hold
+const LOADER_MIN_VISIBLE_MS = 0;
 const LOADER_MAX_WAIT_MS = 10000;
 const IMAGE_PLACEHOLDER_SRC = "data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA=";
 const FIREBASE_AUTH_COMPAT_CDN = "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js";
@@ -394,7 +395,8 @@ function hideLoaderWithMinDelay(force = false) {
 }
 
 function tryHideLoader() {
-    const ready = loaderRenderDone && loaderConnectionsDone;
+    // only care that a render has completed; connections can draw later
+    const ready = loaderRenderDone;
     if (!ready) return;
     setLoaderProgress(100);
     hideLoaderWithMinDelay(false);
@@ -1526,8 +1528,18 @@ function render() {
     if (!nodesLayer || !svg) return;
     nodesLayer.innerHTML = "";
     svg.innerHTML = "";
+
+    // virtual rendering when data set grows
+    const totalCount = familyData.length;
+    const useViewportCulling = totalCount > 100;
+    const viewport = useViewportCulling ? computeViewportRect() : null;
+
     familyData.forEach((n) => {
         if (!isVisible(n, searchContext)) return;
+        if (useViewportCulling) {
+            const h = getNodeHeight(n);
+            if (!nodeIntersectsViewport(n, viewport, nodeWidth, h)) return;
+        }
 
         const isRootCard = n.id === "root";
         const isRootChild = n.parentId === "root";
@@ -1664,11 +1676,41 @@ function render() {
         if (loaderHidden) observeCardPhotos();
     });
     renderSearchResults();
+
+    // loader can hide immediately once at least one render has run
+    if (!loaderHidden) {
+        loaderRenderDone = true;
+        tryHideLoader();
+    }
 }
 
 // stub used by render(); feature may be unimplemented or removed
 function renderSearchResults() {
     // no-op placeholder to avoid console errors
+}
+
+// viewport utilities used when there are a lot of cards
+let lastRenderViewport = null;
+function computeViewportRect() {
+    const invScale = scale ? 1 / scale : 1;
+    const x0 = -posX * invScale;
+    const y0 = -posY * invScale;
+    const w = window.innerWidth * invScale;
+    const h = window.innerHeight * invScale;
+    const buffer = 100; // content‑space padding so cards just outside still render
+    return { x0, y0, w, h, buffer };
+}
+function viewportChanged(a, b) {
+    if (!a || !b) return true;
+    const tol = 50;
+    return Math.abs(a.x0 - b.x0) > tol || Math.abs(a.y0 - b.y0) > tol ||
+           Math.abs(a.w - b.w) > tol || Math.abs(a.h - b.h) > tol;
+}
+function nodeIntersectsViewport(node, vp, nodeW, nodeH) {
+    if (!vp) return true;
+    const x = node.x, y = node.y;
+    return x + nodeW >= vp.x0 - vp.buffer && x <= vp.x0 + vp.w + vp.buffer &&
+           y + nodeH >= vp.y0 - vp.buffer && y <= vp.y0 + vp.h + vp.buffer;
 }
 
 function isVisible(node, searchContext) {
@@ -1709,6 +1751,16 @@ function updateTransform() {
     const treeContainer = document.getElementById("tree-container");
     if (!treeContainer) return;
     treeContainer.style.transform = `translate3d(${posX}px, ${posY}px, 0) scale(${scale})`;
+
+    // when using viewport culling we need to re-evaluate nodes on pan/zoom
+    if (familyData.length > 100) {
+        const vp = computeViewportRect();
+        if (viewportChanged(vp, lastRenderViewport)) {
+            lastRenderViewport = vp;
+            render();
+        }
+    }
+
     scheduleDrawConnections();
 }
 
