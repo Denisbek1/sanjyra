@@ -24,6 +24,7 @@ body, html {
     background-attachment: fixed;
     color: white;
     touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* modal adjustments for mobile keyboards */
@@ -126,13 +127,7 @@ body.loading {
     transform-origin: 0 0;
     transform: translateZ(0);
     cursor: grab;
-    will-change: transform;
     touch-action: none;
-}
-
-.tree-container {
-    transform: translateZ(0);
-    will-change: transform;
 }
 
 #tree-container:active { cursor: grabbing; }
@@ -686,26 +681,6 @@ body.loading {
     justify-content: center;
     color: var(--accent-gold);
     font-size: 0.96rem;
-    cursor: pointer;
-    z-index: 100;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-    backdrop-filter: blur(5px);
-}
-
-#share-btn {
-    position: fixed;
-    bottom: 18px;
-    right: 110px;
-    width: 38px;
-    height: 38px;
-    background: var(--node-bg);
-    border: 1px solid var(--accent-gold);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--accent-gold);
-    font-size: 0.92rem;
     cursor: pointer;
     z-index: 100;
     box-shadow: 0 4px 20px rgba(0,0,0,0.6);
@@ -2001,20 +1976,20 @@ textarea:focus { border-color: var(--accent-gold); }
     #share-btn {
         width: 34px;
         height: 34px;
-        bottom: 14px;
+        bottom: calc(14px + env(safe-area-inset-bottom, 0px));
         font-size: 0.88rem;
     }
 
     #home-btn {
-        right: 14px;
+        right: calc(14px + env(safe-area-inset-right, 0px));
     }
 
     #reset-tree-btn {
-        right: 54px;
+        right: calc(54px + env(safe-area-inset-right, 0px));
     }
 
     #share-btn {
-        right: 94px;
+        right: calc(94px + env(safe-area-inset-right, 0px));
     }
 }
 @media (max-width: 768px) {
@@ -2081,4 +2056,19 @@ textarea:focus { border-color: var(--accent-gold); }
 
 .site-link a {
     white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .loader-circle,
+    .timeline-item,
+    .notice-card,
+    .notice-card.is-hide {
+        animation: none !important;
+        transition: none !important;
+    }
+
+    .node-container:hover,
+    .add-plus:hover {
+        transform: none;
+    }
 }

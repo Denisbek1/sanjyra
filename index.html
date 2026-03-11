@@ -2,15 +2,18 @@
 <html lang="ky" translate="no">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="google" content="notranslate">
+    <meta name="description" content="Абдраман атанын урпактарынын үй-бүлөлүк санжырасы, ата-тек тарыхы жана туугандык байланыштары.">
+    <meta name="theme-color" content="#0b0f1a">
     <title>Абдраман атанын санжырасы</title>
+    <meta property="og:site_name" content="Абдраман атанын санжырасы">
     <meta property="og:title" content="Абдраман атанын санжырасы">
     <meta property="og:description" content="Ата-бабанын тарыхын сактаган үй-бүлөлүк санжыра">
     <!-- social preview image -->
     <!-- WhatsApp can aggressively cache; use a new filename to guarantee a fresh fetch -->
-    <meta property="og:image" content="https://abdraman.pages.dev/assets/preview-wp.png">
-    <meta property="og:image:secure_url" content="https://abdraman.pages.dev/assets/preview-wp.png">
+    <meta property="og:image" content="https://abdraman.pages.dev/assets/prev.png">
+    <meta property="og:image:secure_url" content="https://abdraman.pages.dev/assets/prev.png">
     <meta property="og:image:type" content="image/png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
@@ -19,12 +22,13 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Абдраман атанын санжырасы">
     <meta name="twitter:description" content="Ата-бабанын тарыхын сактаган үй-бүлөлүк санжыра">
-    <meta name="twitter:image" content="https://abdraman.pages.dev/assets/preview-wp.png">
+    <meta name="twitter:image" content="https://abdraman.pages.dev/assets/prev.png">
+    <meta name="twitter:image:alt" content="Абдраман атанын санжырасынын социалдык алдын ала көрүүсү">
     <link rel="canonical" href="https://abdraman.pages.dev">
     <!-- favicon and touch icon -->
     <link rel="icon" type="image/png" href="/assets/sanjyra-icon.png" sizes="64x64">
     <link rel="apple-touch-icon" href="/assets/sanjyra-icon.png">
-    <link rel="icon" href="/assets/sanjyra-icon.webp">
+    <link rel="preload" as="image" href="assets/avatar.webp" fetchpriority="high">
     <!-- preconnect to Google Fonts domains for faster handshake -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -39,7 +43,7 @@
 <body class="loading" translate="no">
     <div id="app-loader" aria-live="polite" aria-busy="true">
         <div class="loader-content">
-            <img src="assets/sanjyra-icon.webp" class="loader-logo" alt="Санжыра логотип" loading="lazy">
+            <img src="assets/sanjyra-icon.png" class="loader-logo" alt="Санжыра логотип" fetchpriority="high">
             <div class="loader-circle"></div>
             <div class="loader-text">Жүктөлүүдө...</div>
             <div id="loader-progress" class="loader-progress">0%</div>
@@ -48,19 +52,19 @@
     <div class="top-bar">
         <button id="mobile-menu-btn" class="menu-btn" title="Меню" aria-label="Меню">☰</button>
     </div>
-    <div id="home-btn" title="Башына кайтуу">
-        <i class="fas fa-home"></i>
-    </div>
-    <div id="reset-tree-btn" title="Reset Tree">
-        <i class="fas fa-undo"></i>
-    </div>
-    <div id="share-btn" title="Бөлүшүү">
-        <i class="fas fa-share-nodes"></i>
-    </div>
+    <button id="home-btn" type="button" title="Башына кайтуу" aria-label="Башына кайтуу">
+        <i class="fas fa-home" aria-hidden="true"></i>
+    </button>
+    <button id="reset-tree-btn" type="button" title="Даракты баштапкы абалга келтирүү" aria-label="Даракты баштапкы абалга келтирүү">
+        <i class="fas fa-undo" aria-hidden="true"></i>
+    </button>
+    <button id="share-btn" type="button" title="Бөлүшүү" aria-label="Сайтты бөлүшүү">
+        <i class="fas fa-share-nodes" aria-hidden="true"></i>
+    </button>
     <div id="sidebar-overlay">
-        <aside id="mobile-sidebar">
+        <aside id="mobile-sidebar" role="dialog" aria-modal="true" aria-labelledby="sidebar-title">
             <div class="sidebar-head">
-                <div class="sidebar-title">Меню</div>
+                <div id="sidebar-title" class="sidebar-title">Меню</div>
                 <button id="sidebar-close-btn" class="sidebar-close" aria-label="Жабуу">&times;</button>
             </div>
             <div class="sidebar-menu">
@@ -123,7 +127,7 @@
     </div>
 
     <div id="modal-overlay">
-        <div id="member-modal-content" class="modal-content">
+        <div id="member-modal-content" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="member-modal-title" aria-describedby="member-modal-confirm-text">
             <h2 id="member-modal-title" class="text-lg font-bold mb-3 text-center text-white">Добавить человека</h2>
             <div id="member-modal-parent-name" class="member-modal-parent-name"></div>
             <div id="member-modal-confirm-text" class="member-modal-confirm-text">Бул адамга бала кошосузбу?</div>
@@ -142,7 +146,7 @@
     </div>
 
     <div id="bio-overlay">
-        <div id="sanjyra-modal" class="bio-modal">
+        <div id="sanjyra-modal" class="bio-modal" role="dialog" aria-modal="true" aria-labelledby="bio-modal-title">
             <div class="bio-modal-head">
                 <h2 id="bio-modal-title" class="bio-title">Абдраман</h2>
                 <button id="bio-close-btn" class="bio-close" aria-label="Жабуу">&times;</button>
@@ -158,10 +162,10 @@
         </div>
     </div>
 
-    <div id="tree-container" translate="no">
+    <main id="tree-container" translate="no" aria-label="Санжыра дарагы">
         <svg id="tree-svg" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; overflow: visible;"></svg>
         <div id="nodes-layer"></div>
-    </div>
+    </main>
     <div id="notice-host" aria-live="polite" aria-atomic="true"></div>
     <!-- workaround for firebase compat libraries, they expect `global` to exist -->
     <script>
@@ -172,6 +176,6 @@
     </script>
     <!-- Firebase scripts will be loaded dynamically when needed -->
     <script defer src="app-config.js"></script>
-    <script defer src="js/script.min.js"></script>
+    <script defer src="js/script.js"></script>
 </body>
 </html>
