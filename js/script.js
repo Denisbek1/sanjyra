@@ -650,53 +650,37 @@ function bindStaticUiEvents() {
 
     const nodesLayer = document.getElementById("nodes-layer");
     if (nodesLayer) {
-        // desktop clicks
+        // unified pointer handling (covers mouse, touch, pen)
+        let activePointer = null;
+        nodesLayer.addEventListener("pointerdown", (e) => {
+            if (isPinching) return;
+            activePointer = { id: e.pointerId, startX: e.clientX, startY: e.clientY, moved: false };
+        });
+        nodesLayer.addEventListener("pointermove", (e) => {
+            if (activePointer && e.pointerId === activePointer.id) {
+                const dx = e.clientX - activePointer.startX;
+                const dy = e.clientY - activePointer.startY;
+                if (Math.hypot(dx, dy) > 10) {
+                    activePointer.moved = true;
+                }
+            }
+        });
+        nodesLayer.addEventListener("pointerup", (e) => {
+            if (activePointer && e.pointerId === activePointer.id) {
+                if (!activePointer.moved && Date.now() - lastCardTouchToggleAt > 420) {
+                    const toggled = handleCardToggleFromEventTarget(e.target);
+                    if (toggled) {
+                        lastCardTouchToggleAt = Date.now();
+                    }
+                }
+            }
+            activePointer = null;
+        });
+        // keep old click as fallback for devices without pointer events
         nodesLayer.addEventListener("click", (event) => {
             if (Date.now() - lastCardTouchToggleAt < 420) return;
             handleCardToggleFromEventTarget(event.target);
         });
-
-        // touch handling: open on touchstart unless dragged
-        let touchStartX = 0, touchStartY = 0, touchMoved = false, touchToggled = false;
-        nodesLayer.addEventListener("touchstart", (event) => {
-            if (isPinching) return;
-            if (!event.touches || event.touches.length !== 1) return;
-            const touch = event.touches[0];
-            touchStartX = touch.clientX;
-            touchStartY = touch.clientY;
-            touchMoved = false;
-            touchToggled = false;
-            // try to toggle immediately
-            if (Date.now() - lastCardTouchToggleAt < 420) return;
-            const toggled = handleCardToggleFromEventTarget(event.target);
-            if (toggled) {
-                lastCardTouchToggleAt = Date.now();
-                touchToggled = true;
-                event.preventDefault();
-            }
-        }, { passive: false });
-
-        nodesLayer.addEventListener("touchmove", (event) => {
-            if (!event.touches || event.touches.length !== 1) return;
-            const touch = event.touches[0];
-            const dx = touch.clientX - touchStartX;
-            const dy = touch.clientY - touchStartY;
-            if (Math.hypot(dx, dy) > 10) {
-                touchMoved = true;
-            }
-        }, { passive: false });
-
-        nodesLayer.addEventListener("touchend", (event) => {
-            if (isPinching) return;
-            if (!event.changedTouches || event.changedTouches.length !== 1) return;
-            if (touchToggled) return; // already opened on start
-            if (touchMoved) return; // was a drag
-            const toggled = handleCardToggleFromEventTarget(event.target);
-            if (toggled) {
-                lastCardTouchToggleAt = Date.now();
-                event.preventDefault();
-            }
-        }, { passive: false });
     }
 
 }
