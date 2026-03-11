@@ -78,7 +78,8 @@ const seedData = [
 
 // root avatar image – replace with your saved picture (PNG or WebP) in /assets/ folder
 // image is stored as WebP as requested
-const rootPhoto = "assets/avatar.webp"; // avatar in WebP format
+// use leading slash so browser always resolves from site root
+const rootPhoto = "/assets/avatar.webp"; // avatar in WebP format
 const malePhoto = "assets/kalpak.webp";
 const femalePhoto = "assets/yal.webp";
 const SIDEBAR_SECTIONS = ["goal", "share", "contact"];
