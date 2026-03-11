@@ -939,14 +939,33 @@ function loadLocalJson(key, fallback) {
     try {
         const raw = localStorage.getItem(key);
         if (!raw) return fallback;
-        return JSON.parse(raw);
+        // sanity check: raw should be valid JSON
+        try {
+            return JSON.parse(raw);
+        } catch (inner) {
+            // attempt simple repair: remove leading zeros in numeric array element
+            const repaired = raw.replace(/\[0+(\d+)\]/g, "[$1]")
+                               .replace(/\[0+\]/g, "[0]");
+            try {
+                return JSON.parse(repaired);
+            } catch (e2) {
+                console.warn("loadLocalJson: failed to parse and repair", raw, e2);
+                return fallback;
+            }
+        }
     } catch (error) {
         return fallback;
     }
 }
 
 function saveLocalJson(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
+    // only store objects/arrays, not raw strings
+    try {
+        const str = JSON.stringify(value);
+        localStorage.setItem(key, str);
+    } catch (err) {
+        console.error("saveLocalJson failed", err, value);
+    }
 }
 
 function loadInitialLocalData() {
