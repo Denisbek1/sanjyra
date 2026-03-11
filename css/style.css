@@ -312,7 +312,7 @@ body.loading {
 .ancestry-head-title {
     color: #fff3d3;
     font-size: 0.84rem;
-    font-weight: 800;
+    font-weight: 700;
     line-height: 1.15;
 }
 
@@ -1019,7 +1019,7 @@ button i {
 
 .member-modal-parent-name {
     display: none;
-    font-weight: 800;
+    font-weight: 700;
     font-size: 1.05rem;
     color: #fff;
     text-align: center;

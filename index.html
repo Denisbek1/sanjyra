@@ -20,8 +20,14 @@
     <meta name="twitter:image" content="https://abdraman.pages.dev/assets/preview.webp">
     <link rel="canonical" href="https://abdraman.pages.dev">
     <link rel="icon" href="/assets/sanjyra-icon.webp">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- preconnect to Google Fonts domains for faster handshake -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- requesting only the weights actually needed reduces download size -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    <!-- Font Awesome provides icons used in the UI (home, undo, share, social brands, link, user).
+         Consider replacing these with inline SVGs to drop this 70‑KB stylesheet entirely. -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -159,9 +165,7 @@
         window.yandex = window.yandex || {};
         window.google = window.google || {};
     </script>
-    <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-    <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
-    <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+    <!-- Firebase scripts will be loaded dynamically when needed -->
     <script defer src="app-config.js"></script>
     <script defer src="js/script.min.js"></script>
 </body>
