@@ -1,0 +1,86 @@
+[33m59c6e94[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m update site
+[33mbb1a8bd[m fix js paths
+[33mcf14c9d[m resolve merge conflict
+[33m29e23db[m[33m ([m[1;31morigin/qwen-code-f9549d03-cfab-4ae2-a91e-a4dda291cf57[m[33m, [m[1;32mqwen-code-f9549d03-cfab-4ae2-a91e-a4dda291cf57[m[33m)[m Refactor JavaScript files into modular structure
+[33m16187a6[m update site
+[33mc787ad2[m update site
+[33m571b8d2[m update site
+[33m16afbbd[m update site
+[33ma72363b[m update site
+[33m4bd0986[m update site
+[33m2bdb57f[m update site
+[33m412414f[m update site
+[33m8c5f7b6[m update site
+[33m3a5310d[m update site
+[33m8165fbf[m update site
+[33m3c37224[m update site
+[33m63c04ce[m fix: show biography for Чолпонбай (cho)
+[33m1b7ed0c[m Switch rootPhoto to avatar.webp
+[33m02255db[m Add new root avatar image (prev.png)
+[33m79f7c0b[m Point rootPhoto at updated filename (prev.png)
+[33m871800a[m Cache‑bust OG preview image with query string
+[33mc9cde04[m add avatar image
+[33mbadddee[m Always set root avatar src to avoid lazy loading issues
+[33m1246cda[m Add version query to avatar.webp to bypass cache
+[33mb985f0d[m Use relative path for avatar again
+[33mbcbb3da[m Make rootPhoto path absolute
+[33mee78c5f[m Use WebP avatar file
+[33m991b03d[m Switch rootPhoto to avatar.png
+[33mbfd3377[m Update rootPhoto path for new avatar
+[33md95f201[m add preview and icon
+[33m2b228aa[m Add favicon and social preview meta tags
+[33m0d92e58[m Optimize font loading and note Font Awesome use
+[33ma49b1f0[m Mobile performance: rAF batching, passive listeners, touch-action improvements
+[33mbf64d34[m Fix card flicker by unifying pointer event handling
+[33mfdc880b[m Improve touch handling for instant card opening
+[33m28f790a[m Reuse card DOM elements to prevent avatar flicker
+[33ma1adaaa[m Add minified script and defer attributes
+[33m7c82570[m Refine loader timing: min 2s, rAF before hide
+[33me877e58[m Viewport culling, faster loader, lazy loader logo
+[33m999ac07[m Remove 500 weight, upgrade date-text to 600
+[33mfe6747d[m Remove unused Marck Script font, optimize Google Fonts weights
+[33m57ca0c6[m Harden localStorage JSON parse/save
+[33m14cbd12[m Add globals for yandex/google
+[33m882d195[m Optimize mobile performance, modal, canvas lines, cache
+[33m396d313[m performance optimization
+[33maad8507[m fix-mobile-toggle
+[33mfa4b3d6[m "update"
+[33m5ec8389[m "update"
+[33m7e49f60[m performance-optimization
+[33m4ff8a9c[m performance_optimization
+[33me3886cf[m performance optimization
+[33m4140136[m performance optimization
+[33m4582db4[m performance_optimization
+[33m9755213[m performance optimization
+[33m65fbb75[m performance optimization
+[33m017f8f6[m performance optimization
+[33ma659e81[m performance optimization
+[33m7a147c2[m performance optimization
+[33m35ad2f1[m convert images to webp
+[33m3de514d[m add loading screen and firebase load protection
+[33mc8b0ed3[m add loading screen and firebase load protection
+[33me6d8c55[m add loading screen and firebase load protection
+[33m5ae4ad6[m add loading screen and firebase load protection
+[33m124248c[m update-mobile-controls
+[33mee6e89a[m fix-admin-auth-system
+[33m47b12d0[m improve modal UI and mobile layout
+[33m8470314[m fix modal, suffix and firebase submit
+[33m31abb6f[m project optimization
+[33mbcd8b71[m project optimization
+[33mb9d6d76[m project-optimization
+[33m754e91d[m update-site
+[33mfe4dfa7[m update mobile controls
+[33m513d48a[m Add Cloudflare Workers configuration
+[33m91dbe8d[m update mobile controls
+[33m67145bc[m update site
+[33md1b8b7b[m remove cache parameter from preview
+[33m5e78ac4[m remove cache parameter from preview
+[33m4649633[m fix preview meta tags
+[33m673b712[m update preview image
+[33m0315dad[m update_share_preview_cache_bust
+[33m7fb83df[m update_preview_meta_version
+[33m928e1e0[m fix preview image
+[33m81088ac[m update preview image
+[33m5fd36b7[m changed preview image to sanjyra-icon
+[33maa3473e[m обновил сайт
+[33m32f164e[m first sanjyra site
