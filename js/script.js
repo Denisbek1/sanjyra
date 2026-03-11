@@ -1696,9 +1696,11 @@ function render() {
                 el.classList.add("has-bio-button");
             }
 
+            // ensure root avatar always loads immediately (not lazy)
             if (n.id === "root") {
                 const rootAvatar = el.querySelector(".profile-img");
                 if (rootAvatar) {
+                    rootAvatar.src = mainPhoto; // bypass data-src lazy logic
                     rootAvatar.addEventListener("click", (event) => {
                         event.stopPropagation();
                         openBioModal("root");
