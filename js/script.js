@@ -168,7 +168,7 @@ let viewportAnimationTimer = null;
 const MOBILE_LAYOUT_BREAKPOINT = 768;
 const DESKTOP_HORIZONTAL_SPACING = 530;
 const MOBILE_HORIZONTAL_SPACING = 360;
-const NODE_HEIGHT = 150;
+const NODE_HEIGHT = 120; // reduced from 150 for denser layout
 // Card width parameters for all nodes except root (Абдраман).
 const NON_ROOT_CARD_WIDTH_DESKTOP = 230;
 const NON_ROOT_CARD_WIDTH_MOBILE = 170;
@@ -609,6 +609,16 @@ function bindStaticUiEvents() {
     if (newDateInput) {
         newDateInput.addEventListener("input", () => {
             newDateInput.value = newDateInput.value.replace(/[^0-9]/g, "");
+        });
+        newDateInput.addEventListener("focus", () => {
+            // ensure input visible when keyboard opens
+            setTimeout(() => newDateInput.scrollIntoView({behavior: "smooth", block: "center"}), 300);
+        });
+    }
+    const newNameInput = document.getElementById("new-name");
+    if (newNameInput) {
+        newNameInput.addEventListener("focus", () => {
+            setTimeout(() => newNameInput.scrollIntoView({behavior: "smooth", block: "center"}), 300);
         });
     }
 
@@ -1275,17 +1285,18 @@ function canShowLifeStory(node) {
 }
 
 function getLeafVerticalSpacing(node) {
-    if (!node) return 180;
-    if (node.id === "root") return 180;
-    if (node.parentId === "root") return 154;
-    return 120;
+    // reduce vertical spacing to match smaller card height
+    if (!node) return 150;
+    if (node.id === "root") return 150;
+    if (node.parentId === "root") return 130;
+    return 100;
 }
 
 function getNodeHeight(node) {
     if (!node) return NODE_HEIGHT;
     if (node.id === "root") return NODE_HEIGHT;
-    if (node.parentId === "root") return 130;
-    return 92;
+    if (node.parentId === "root") return 110; // slightly taller for root children
+    return 80; // compact descendants smaller
 }
 
 function getTreeHeight(id, searchContext) {
@@ -1636,6 +1647,11 @@ function render() {
     renderSearchResults();
 }
 
+// stub used by render(); feature may be unimplemented or removed
+function renderSearchResults() {
+    // no-op placeholder to avoid console errors
+}
+
 function isVisible(node, searchContext) {
     if (!node) return false;
     if (searchContext && !searchContext.visibleIds.has(node.id)) return false;
@@ -1913,6 +1929,13 @@ function startApprovedSubscription() {
 }
 
 function initBackend() {
+    // debug: check Firebase availability
+    if (!window.firebase) {
+        console.error("Firebase script failed to load (window.firebase undefined)");
+    }
+    if (!appConfig.firebase) {
+        console.error("appConfig.firebase missing", appConfig);
+    }
     if (!window.firebase || !appConfig.firebase) {
         backendEnabled = false;
         authEnabled = false;
@@ -1951,6 +1974,7 @@ function initBackend() {
         auth = app.auth();
         authEnabled = Boolean(auth);
     } catch (error) {
+        console.error("Error initializing Firebase auth:", error);
         auth = null;
         authEnabled = false;
     }
@@ -2343,20 +2367,14 @@ function toggleBranch(nodeId) {
     render();
 
     if (node.expanded) {
+        // remember current scale so we can restore when collapsing
         nodeZoomMemory.set(node.id, scale);
+        // after layout has updated, zoom out/in to fit all direct children
         setTimeout(() => {
-            const visibleChildren = familyData
-                .filter((n) => n.parentId === nodeId)
-                .sort((a, b) => (a.y || 0) - (b.y || 0));
-            const firstChild = visibleChildren[0];
-            if (!firstChild) return;
-
-            const maxScale = window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT ? 2.2 : 3;
-            const zoomedScale = Math.min(Math.max(scale * 1.18, 0.1), maxScale);
-            scale = zoomedScale;
-            centerViewOnNode(firstChild, {
+            centerViewOnExpandedChildren(node, {
                 animate: true,
-                duration: 460
+                duration: 460,
+                allowZoomIn: true
             });
         }, 200);
     } else {

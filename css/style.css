@@ -26,6 +26,28 @@ body, html {
     touch-action: manipulation;
 }
 
+/* modal adjustments for mobile keyboards */
+#modal-overlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+}
+.modal-content {
+    max-width: 90vw;
+    width: 320px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 16px;
+}
+#member-modal-content input,
+#member-modal-content select {
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 8px;
+}
+
 body.loading {
     overflow: hidden;
 }
