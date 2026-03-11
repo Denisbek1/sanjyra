@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap');
 
 :root {
     --bg-dark: #0a0c10;
@@ -418,7 +418,7 @@ body.loading {
     font-size: 1rem;
     font-weight: 700;
 }
-.date-text { font-size: 0.79rem; color: var(--accent-gold); font-weight: 500; margin-bottom: 2px; white-space: nowrap; }
+.date-text { font-size: 0.79rem; color: var(--accent-gold); font-weight: 600; margin-bottom: 2px; white-space: nowrap; }
 .card-meta-row {
     display: flex;
     align-items: center;
