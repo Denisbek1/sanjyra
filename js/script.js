@@ -165,6 +165,8 @@ let pinchStartScale = 1;
 let pinchStartPosX = 0;
 let pinchStartPosY = 0;
 let viewportAnimationTimer = null;
+// flag used to batch transform updates via requestAnimationFrame
+let transformScheduled = false;
 const MOBILE_LAYOUT_BREAKPOINT = 768;
 const DESKTOP_HORIZONTAL_SPACING = 530;
 const MOBILE_HORIZONTAL_SPACING = 360;
@@ -2218,7 +2220,7 @@ const handleMove = (x, y) => {
     if (!dragging) return;
     posX = x - startX;
     posY = y - startY;
-    updateTransform();
+    scheduleUpdateTransform();
 };
 
 function getTouchDistance(t1, t2) {
@@ -2232,6 +2234,16 @@ function getTouchMidpoint(t1, t2) {
         x: (t1.clientX + t2.clientX) / 2,
         y: (t1.clientY + t2.clientY) / 2
     };
+}
+
+// schedule the updateTransform call in next animation frame
+function scheduleUpdateTransform() {
+    if (transformScheduled) return;
+    transformScheduled = true;
+    requestAnimationFrame(() => {
+        updateTransform();
+        transformScheduled = false;
+    });
 }
 
 const handleUp = () => {
@@ -2265,9 +2277,9 @@ document.addEventListener("mousedown", (e) => {
         && !isUiOverlayTarget(e.target)) {
         handleDown(e.clientX, e.clientY);
     }
-});
-document.addEventListener("mousemove", (e) => handleMove(e.clientX, e.clientY));
-document.addEventListener("mouseup", handleUp);
+}, { passive: true });
+document.addEventListener("mousemove", (e) => handleMove(e.clientX, e.clientY), { passive: true });
+document.addEventListener("mouseup", handleUp, { passive: true });
 
 document.addEventListener("touchstart", (e) => {
     if (isUiOverlayTarget(e.target)) return;
@@ -2311,7 +2323,7 @@ document.addEventListener("touchmove", (e) => {
             scale = nextScale;
             posX = midpoint.x - (worldX * scale);
             posY = midpoint.y - (worldY * scale);
-            updateTransform();
+            scheduleUpdateTransform();
         }
         return;
     }
@@ -2347,7 +2359,7 @@ document.addEventListener("wheel", (e) => {
     setViewportTransition(0);
     const maxScale = window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT ? 2.2 : 3;
     scale = Math.min(Math.max(scale * (e.deltaY > 0 ? 0.9 : 1.1), 0.1), maxScale);
-    updateTransform();
+    scheduleUpdateTransform();
 }, { passive: false });
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -2389,11 +2401,11 @@ document.addEventListener("DOMContentLoaded", () => {
 window.addEventListener("resize", () => {
     render();
     resetView();
-});
+}, { passive: true });
 
 window.addEventListener("resize", () => {
     redrawConnections();
-});
+}, { passive: true });
 
 window.addEventListener("load", () => {
     runDrawConnectionsFrame();
