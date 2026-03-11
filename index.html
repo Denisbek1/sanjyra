@@ -152,6 +152,13 @@
         <div id="nodes-layer"></div>
     </div>
     <div id="notice-host" aria-live="polite" aria-atomic="true"></div>
+    <!-- workaround for firebase compat libraries, they expect `global` to exist -->
+    <script>
+        // ensure common globals exist for third‑party libs (Firebase, Yandex, Google etc.)
+        window.global = window;
+        window.yandex = window.yandex || {};
+        window.google = window.google || {};
+    </script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
