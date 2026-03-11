@@ -212,8 +212,8 @@ let loaderRenderDone = false;
 let loaderConnectionsDone = false;
 const nodeZoomMemory = new Map();
 let lastCardTouchToggleAt = 0;
-// loader should disappear as soon as the UI is painted; no artificial 3‑second hold
-const LOADER_MIN_VISIBLE_MS = 0;
+// loader must stay visible for at least 2 seconds
+const LOADER_MIN_VISIBLE_MS = 2000;
 const LOADER_MAX_WAIT_MS = 10000;
 const IMAGE_PLACEHOLDER_SRC = "data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA=";
 const FIREBASE_AUTH_COMPAT_CDN = "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js";
@@ -354,14 +354,17 @@ function hideLoader() {
 
     const loader = document.getElementById("app-loader");
     if (loader) {
-        setTimeout(() => {
-            loader.style.opacity = "0";
+        // perform opacity/ removal after the browser has painted
+        requestAnimationFrame(() => {
             setTimeout(() => {
-                if (loader && typeof loader.remove === "function") {
-                    loader.remove();
-                }
-            }, 400);
-        }, 120);
+                loader.style.opacity = "0";
+                setTimeout(() => {
+                    if (loader && typeof loader.remove === "function") {
+                        loader.remove();
+                    }
+                }, 400);
+            }, 120);
+        });
     }
 
     if (document.body) {
@@ -394,12 +397,20 @@ function hideLoaderWithMinDelay(force = false) {
     hideLoader();
 }
 
+let loaderHideRequested = false;
 function tryHideLoader() {
     // only care that a render has completed; connections can draw later
     const ready = loaderRenderDone;
     if (!ready) return;
     setLoaderProgress(100);
-    hideLoaderWithMinDelay(false);
+
+    if (!loaderHideRequested) {
+        loaderHideRequested = true;
+        // wait until next frame to ensure first paint has occurred
+        requestAnimationFrame(() => {
+            hideLoaderWithMinDelay(false);
+        });
+    }
 }
 
 function revealCardImage(img) {
