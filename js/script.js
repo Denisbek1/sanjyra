@@ -1537,8 +1537,14 @@ function render() {
     const nodesLayer = document.getElementById("nodes-layer");
     const svg = document.getElementById("tree-svg");
     if (!nodesLayer || !svg) return;
-    nodesLayer.innerHTML = "";
-    svg.innerHTML = "";
+
+    // build map of existing nodes so we can reuse them
+    const existing = new Map();
+    nodesLayer.querySelectorAll(".node-container.person-card[data-node-id]").forEach(el => {
+        const id = el.dataset.nodeId;
+        if (id) existing.set(id, el);
+    });
+    svg.innerHTML = ""; // always clear connections layer
 
     // virtual rendering when data set grows
     const totalCount = familyData.length;
@@ -1555,14 +1561,29 @@ function render() {
         const isRootCard = n.id === "root";
         const isRootChild = n.parentId === "root";
         const isCompactDescendant = !isRootCard && !isRootChild;
-        const el = document.createElement("div");
-        el.className = `node-container person-card ${isRootCard ? "node-root" : ""} ${isRootChild ? "node-root-child" : ""} ${isCompactDescendant ? "node-compact-descendant" : ""} ${isNodeExpanded(n, searchContext) ? "is-expanded" : ""}`;
-        el.style.left = n.x + "px";
-        el.style.top = n.y + "px";
-        el.style.height = getNodeHeight(n) + "px";
-        el.style.setProperty("--branch-color", n.branchColor || "transparent");
-        el.dataset.personName = n.name || "";
-        el.dataset.nodeId = n.id;
+        // try to reuse existing DOM element
+        let reused = false;
+        let el = existing.get(n.id);
+        if (el) {
+            reused = true;
+            existing.delete(n.id);
+            el.className = `node-container person-card ${isRootCard ? "node-root" : ""} ${isRootChild ? "node-root-child" : ""} ${isCompactDescendant ? "node-compact-descendant" : ""} ${isNodeExpanded(n, searchContext) ? "is-expanded" : ""}`;
+            el.style.left = n.x + "px";
+            el.style.top = n.y + "px";
+            el.style.height = getNodeHeight(n) + "px";
+            el.style.setProperty("--branch-color", n.branchColor || "transparent");
+            el.dataset.personName = n.name || "";
+            el.dataset.nodeId = n.id;
+        } else {
+            el = document.createElement("div");
+            el.className = `node-container person-card ${isRootCard ? "node-root" : ""} ${isRootChild ? "node-root-child" : ""} ${isCompactDescendant ? "node-compact-descendant" : ""} ${isNodeExpanded(n, searchContext) ? "is-expanded" : ""}`;
+            el.style.left = n.x + "px";
+            el.style.top = n.y + "px";
+            el.style.height = getNodeHeight(n) + "px";
+            el.style.setProperty("--branch-color", n.branchColor || "transparent");
+            el.dataset.personName = n.name || "";
+            el.dataset.nodeId = n.id;
+        }
 
         const bDateStr = n.bdate ? `${n.bdate}-жыл` : "";
         const mainPhoto = n.id === "root"
@@ -1619,33 +1640,74 @@ function render() {
             </div>
         ` : "";
 
-        el.innerHTML = `
-            <img src="${IMAGE_PLACEHOLDER_SRC}" data-src="${mainPhoto}" class="profile-img" loading="lazy" decoding="async" />
-            <div class="node-main-content">
-                <div class="flex items-center mb-1">
-                    <div class="name-text">${n.name}</div>
-                    ${indicator}
+        if (!reused) {
+            el.innerHTML = `
+                <img src="${IMAGE_PLACEHOLDER_SRC}" data-src="${mainPhoto}" class="profile-img" loading="lazy" decoding="async" />
+                <div class="node-main-content">
+                    <div class="flex items-center mb-1">
+                        <div class="name-text">${n.name}</div>
+                        ${indicator}
+                    </div>
+                    ${metaContent}
+                    ${partnerContent}
                 </div>
-                ${metaContent}
-                ${partnerContent}
-            </div>
-            ${sideActions}
-        `;
-        if (hasLifeStoryButton) {
-            el.classList.add("has-bio-button");
-        }
+                ${sideActions}
+            `;
+            if (hasLifeStoryButton) {
+                el.classList.add("has-bio-button");
+            }
 
-        if (n.id === "root") {
-            const rootAvatar = el.querySelector(".profile-img");
-            if (rootAvatar) {
-                rootAvatar.addEventListener("click", (event) => {
-                    event.stopPropagation();
-                    openBioModal("root");
-                });
+            if (n.id === "root") {
+                const rootAvatar = el.querySelector(".profile-img");
+                if (rootAvatar) {
+                    rootAvatar.addEventListener("click", (event) => {
+                        event.stopPropagation();
+                        openBioModal("root");
+                    });
+                }
+            }
+
+            nodesLayer.appendChild(el);
+        } else {
+            // update photo attributes if changed
+            const img = el.querySelector(".profile-img");
+            if (img) {
+                img.dataset.src = mainPhoto;
+                if (img.dataset.loaded === "true") img.src = mainPhoto;
+            }
+            // update name and indicator were handled earlier
+            // update meta and partner area and side actions
+            const contentWrapper = el.querySelector(".node-main-content");
+            if (contentWrapper) {
+                contentWrapper.innerHTML = `
+                    <div class="flex items-center mb-1">
+                        <div class="name-text">${n.name}</div>
+                        ${indicator}
+                    </div>
+                    ${metaContent}
+                    ${partnerContent}
+                `;
+            }
+            if (hasLifeStoryButton) {
+                el.classList.add("has-bio-button");
+            } else {
+                el.classList.remove("has-bio-button");
+            }
+            // ensure root avatar click listener exists
+            if (n.id === "root") {
+                const rootAvatar = el.querySelector(".profile-img");
+                if (rootAvatar && !rootAvatar._rootListenerAdded) {
+                    rootAvatar.addEventListener("click", (event) => {
+                        event.stopPropagation();
+                        openBioModal("root");
+                    });
+                    rootAvatar._rootListenerAdded = true;
+                }
+            }
+            if (!nodesLayer.contains(el)) {
+                nodesLayer.appendChild(el);
             }
         }
-
-        nodesLayer.appendChild(el);
 
         if (n.id === "root" && !searchContext) {
             const ancestryX = n.x - (nodeWidth + ancestryGap);
@@ -1674,6 +1736,13 @@ function render() {
             nodesLayer.appendChild(ancestryEl);
         }
 
+    });
+
+    // any elements left in `existing` are no longer needed
+    existing.forEach(el => {
+        if (el && el.parentNode === nodesLayer) {
+            nodesLayer.removeChild(el);
+        }
     });
 
     treeCardsReady = true;
