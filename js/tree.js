@@ -620,6 +620,12 @@ function getDefaultBio(node) {
     return "Биография пока не добавлена.";
 }
 
+function waitTimeout(ms) {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+    });
+}
+
 function resetTreeReadyPromise() {
     treeReadyResolved = false;
     treeReadyPromise = new Promise((resolve) => {
@@ -1783,7 +1789,10 @@ function render() {
     }
     updateTransform();
     const currentRenderCycleId = renderCycleId;
-    waitImagesLoaded(nodesLayer).then(() => {
+    Promise.race([
+        waitImagesLoaded(nodesLayer),
+        waitTimeout(10000)
+    ]).then(() => {
         if (currentRenderCycleId !== renderCycleId) return;
         scheduleDrawConnections({ initial: !firstConnectionsDrawDone, immediate: true });
         if (loaderHidden) observeCardPhotos();
