@@ -261,6 +261,7 @@ let treeReadyPromise = Promise.resolve();
 let resolveTreeReady = null;
 let treeReadyResolved = false;
 let drawConnectionsRaf = null;
+let isDrawingConnections = false;
 let treeCardsReady = false;
 let treeCenteredReady = false;
 let firstConnectionsDrawDone = false;
@@ -1462,13 +1463,24 @@ function runDrawConnectionsFrame() {
     }
     drawConnectionsRaf = requestAnimationFrame(() => {
         drawConnectionsRaf = null;
-        drawConnections();
+        safeDrawConnections();
     });
+}
+
+function safeDrawConnections() {
+    if (isDrawingConnections) return;
+
+    isDrawingConnections = true;
+    try {
+        drawConnections();
+    } finally {
+        isDrawingConnections = false;
+    }
 }
 
 const redrawConnections = debounce(() => {
     runDrawConnectionsFrame();
-}, 60);
+}, 100);
 
 let lastViewportWidth = window.innerWidth;
 let lastViewportIsMobile = window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT;
