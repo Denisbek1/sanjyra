@@ -80,14 +80,11 @@ body.loading {
     filter: drop-shadow(0 4px 12px rgba(212, 167, 86, 0.25));
 }
 
-.loader-circle {
-    width: 50px;
-    height: 50px;
-    border: 4px solid #333;
-    border-top: 4px solid #d4a756;
-    border-radius: 50%;
-    animation: loaderSpin 1s linear infinite;
-    margin: auto;
+.loader-hourglass {
+    font-size: 56px;
+    line-height: 1;
+    margin-bottom: 12px;
+    animation: hourglassFlip 2s infinite ease-in-out;
 }
 
 .loader-text {
@@ -96,12 +93,26 @@ body.loading {
     color: #ffffff;
 }
 
-.loader-progress {
+.loader-percent {
     margin-top: 6px;
     font-size: 16px;
     font-weight: 700;
     color: #d4a756;
     letter-spacing: 0.02em;
+}
+
+@keyframes hourglassFlip {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    50% {
+        transform: rotate(180deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 @keyframes loaderSpin {
