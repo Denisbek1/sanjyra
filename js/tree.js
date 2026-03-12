@@ -1,14 +1,14 @@
 const seedData = [
-    { id: "root", name: "Абдраман", bdate: "1938", gender: "male", partner: "Гүлай", partnerDate: "1940", bio: "", parentId: null, expanded: true },
+    { id: "root", name: "Абдраман", bdate: "1938", gender: "male", partner: "Гүлай", partnerDate: "1940", bio: "abdraman.md", parentId: null, expanded: true },
     { id: "al", name: "Алайчы", bdate: "1958", gender: "male", partner: "Ширин", bio: "", parentId: "root", expanded: false },
-    { id: "al1", name: "Тынчтыкбек (Мир)", bdate: "1981", parentId: "al", expanded: false },
+    { id: "al1", name: "Тынчтыкбек (Мир)", bdate: "1981", bio: "son1.md", parentId: "al", expanded: false },
     { id: "al1_1", name: "Кантемир", bdate: "", parentId: "al1", expanded: false },
     { id: "al1_2", name: "Ак моор", bdate: "", parentId: "al1", expanded: false },
     { id: "al_aidana", name: "Айдана", bdate: "1982", parentId: "al", expanded: false },
     { id: "al_roza", name: "Роза", bdate: "1985", parentId: "al", expanded: false },
     { id: "al_gulnur", name: "Гулнур", bdate: "1987", parentId: "al", expanded: false },
     { id: "al_samara", name: "Самара", bdate: "1989", parentId: "al", expanded: false },
-    { id: "al2", name: "Марат", bdate: "1990", parentId: "al", expanded: false },
+    { id: "al2", name: "Марат", bdate: "1990", bio: "son2.md", parentId: "al", expanded: false },
     { id: "al3", name: "Жаркынбек", bdate: "1984", parentId: "al", expanded: false },
     { id: "al3_1", name: "Ильяз", bdate: "", parentId: "al3", expanded: false },
     { id: "bu", name: "Бүайша", bdate: "1962", gender: "female", partner: "Турат", bio: "", parentId: "root", expanded: false },
@@ -61,7 +61,7 @@ const seedData = [
     { id: "ma4", name: "Элхан", bdate: "2004", parentId: "ma", expanded: false },
     { id: "ma5", name: "Мээрим", bdate: "1997", parentId: "ma", expanded: false },
     { id: "ma6", name: "Акманай", bdate: "2016", parentId: "ma", expanded: false },
-    { id: "su", name: "Суйорбек", bdate: "1980", gender: "male", partner: "Нурпери", bio: "", parentId: "root", expanded: false },
+    { id: "su", name: "Суйорбек", bdate: "1980", gender: "male", partner: "Нурпери", bio: "suyorbek.md", parentId: "root", expanded: false },
     { id: "su1", name: "Денисбек", bdate: "2005", parentId: "su", expanded: false },
     { id: "su2", name: "Элиза", bdate: "2006", parentId: "su", expanded: false },
     { id: "su3", name: "Нуриза", bdate: "2006", parentId: "su", expanded: false },
@@ -255,12 +255,17 @@ let loaderProgressTimer = null;
 let loaderMinTimer = null;
 let loaderMaxTimer = null;
 let loaderStartedAt = 0;
+let loaderMinimumPromise = Promise.resolve();
+let treeReadyPromise = Promise.resolve();
+let resolveTreeReady = null;
+let treeReadyResolved = false;
 let drawConnectionsRaf = null;
 let treeCardsReady = false;
 let treeCenteredReady = false;
 let firstConnectionsDrawDone = false;
 let loaderRenderDone = false;
 let loaderConnectionsDone = false;
+let renderCycleId = 0;
 const nodeZoomMemory = new Map();
 let lastCardTouchToggleAt = 0;
 // loader must stay visible for at least 2 seconds
@@ -455,16 +460,16 @@ function hideLoaderWithMinDelay(force = false) {
 
 let loaderHideRequested = false;
 function tryHideLoader() {
-    // only care that a render has completed; connections can draw later
-    const ready = loaderRenderDone;
+    const ready = loaderRenderDone && loaderConnectionsDone;
     if (!ready) return;
     setLoaderProgress(100);
 
     if (!loaderHideRequested) {
         loaderHideRequested = true;
-        // wait until next frame to ensure first paint has occurred
-        requestAnimationFrame(() => {
-            hideLoaderWithMinDelay(false);
+        Promise.all([loaderMinimumPromise, treeReadyPromise]).then(() => {
+            requestAnimationFrame(() => {
+                hideLoaderWithMinDelay(true);
+            });
         });
     }
 }
@@ -511,6 +516,45 @@ function observeCardPhotos() {
             return;
         }
         revealCardImage(img);
+    });
+}
+
+function waitImagesLoaded(container) {
+    if (!container) return Promise.resolve();
+
+    const images = Array.from(container.querySelectorAll("img"));
+    if (!images.length) return Promise.resolve();
+
+    const pending = images.map((img) => new Promise((resolve) => {
+        if (img.dataset && img.dataset.src && img.dataset.loaded !== "true") {
+            revealCardImage(img);
+        }
+
+        const finish = () => {
+            img.removeEventListener("load", finish);
+            img.removeEventListener("error", finish);
+            resolve();
+        };
+
+        if (img.complete && img.naturalWidth >= 0) {
+            finish();
+            return;
+        }
+
+        img.addEventListener("load", finish, { once: true });
+        img.addEventListener("error", finish, { once: true });
+    }));
+
+    return Promise.all(pending).then(() => undefined);
+}
+
+function preloadImages() {
+    const preloadList = [rootPhoto, malePhoto, femalePhoto];
+    preloadList.forEach((src) => {
+        const img = new Image();
+        img.decoding = "async";
+        img.loading = "eager";
+        img.src = src;
     });
 }
 
@@ -572,7 +616,18 @@ function applyInitialTreeExpansionState(list) {
 
 function getDefaultBio(node) {
     if (!node) return "";
-    return "Өмүр баян азырынча кошула элек.";
+    return "Биография пока не добавлена.";
+}
+
+function resetTreeReadyPromise() {
+    treeReadyResolved = false;
+    treeReadyPromise = new Promise((resolve) => {
+        resolveTreeReady = () => {
+            if (treeReadyResolved) return;
+            treeReadyResolved = true;
+            resolve();
+        };
+    });
 }
 
 function isMobileLayout() {
@@ -612,139 +667,6 @@ function getParentDisplayName(parentId, parentName) {
     if (!parentId) return "Тамыры көрсөтүлгөн эмес";
     const parent = familyData.find((node) => node.id === parentId);
     return parent ? parent.name : parentId;
-}
-
-function bindStaticUiEvents() {
-    const mobileMenuBtn = document.getElementById("mobile-menu-btn");
-    if (mobileMenuBtn) mobileMenuBtn.addEventListener("click", openSidebar);
-
-    const homeBtn = document.getElementById("home-btn");
-    if (homeBtn) homeBtn.addEventListener("click", resetView);
-
-    const resetTreeBtn = document.getElementById("reset-tree-btn");
-    if (resetTreeBtn) resetTreeBtn.addEventListener("click", resetTree);
-
-    const shareBtn = document.getElementById("share-btn");
-    if (shareBtn) shareBtn.addEventListener("click", quickShareSite);
-
-    const sidebarOverlay = document.getElementById("sidebar-overlay");
-    if (sidebarOverlay) {
-        sidebarOverlay.addEventListener("click", (event) => {
-            if (event.target === sidebarOverlay) closeSidebar();
-        });
-    }
-
-    const mobileSidebar = document.getElementById("mobile-sidebar");
-    if (mobileSidebar) mobileSidebar.addEventListener("click", (event) => event.stopPropagation());
-
-    const sidebarCloseBtn = document.getElementById("sidebar-close-btn");
-    if (sidebarCloseBtn) sidebarCloseBtn.addEventListener("click", closeSidebar);
-
-    const sidebarItemGoal = document.getElementById("sidebar-item-goal");
-    if (sidebarItemGoal) sidebarItemGoal.addEventListener("click", () => openSidebarSection("goal"));
-
-    const sidebarItemShare = document.getElementById("sidebar-item-share");
-    if (sidebarItemShare) sidebarItemShare.addEventListener("click", () => openSidebarSection("share"));
-
-    const sidebarItemContact = document.getElementById("sidebar-item-contact");
-    if (sidebarItemContact) sidebarItemContact.addEventListener("click", () => openSidebarSection("contact"));
-
-    const copySiteLinkBtn = document.getElementById("copy-site-link-btn");
-    if (copySiteLinkBtn) copySiteLinkBtn.addEventListener("click", copySiteLink);
-
-    const adminSignInBtn = document.getElementById("admin-signin-btn");
-    if (adminSignInBtn) {
-        adminSignInBtn.addEventListener("click", async () => {
-            await loadFirebase();
-            // initBackend will have been triggered by loadFirebase
-            adminSignIn();
-        });
-    }
-
-    const adminLogoutBtn = document.getElementById("admin-logout-btn");
-    if (adminLogoutBtn) adminLogoutBtn.addEventListener("click", adminSignOut);
-
-    const modalOverlay = document.getElementById("modal-overlay");
-    if (modalOverlay) {
-        modalOverlay.addEventListener("click", (event) => {
-            if (event.target === modalOverlay) closeModal();
-        });
-    }
-
-    const memberModalContent = document.getElementById("member-modal-content");
-    if (memberModalContent) memberModalContent.addEventListener("click", (event) => event.stopPropagation());
-
-    const memberModalSaveBtn = document.getElementById("member-modal-save-btn");
-    if (memberModalSaveBtn) memberModalSaveBtn.addEventListener("click", saveMemberAction);
-
-    const memberModalCancelBtn = document.getElementById("member-modal-cancel-btn");
-    if (memberModalCancelBtn) memberModalCancelBtn.addEventListener("click", closeModal);
-
-    const newDateInput = document.getElementById("new-date");
-    if (newDateInput) {
-        newDateInput.addEventListener("input", () => {
-            newDateInput.value = newDateInput.value.replace(/[^0-9]/g, "");
-        });
-        newDateInput.addEventListener("focus", () => {
-            // ensure input visible when keyboard opens
-            setTimeout(() => newDateInput.scrollIntoView({behavior: "smooth", block: "center"}), 300);
-        });
-    }
-    const newNameInput = document.getElementById("new-name");
-    if (newNameInput) {
-        newNameInput.addEventListener("focus", () => {
-            setTimeout(() => newNameInput.scrollIntoView({behavior: "smooth", block: "center"}), 300);
-        });
-    }
-
-    const bioOverlay = document.getElementById("bio-overlay");
-    if (bioOverlay) {
-        bioOverlay.addEventListener("click", (event) => {
-            if (event.target === bioOverlay) closeBioModal();
-        });
-    }
-
-    const bioModalShell = document.getElementById("sanjyra-modal");
-    if (bioModalShell) bioModalShell.addEventListener("click", (event) => event.stopPropagation());
-
-    const bioCloseBtn = document.getElementById("bio-close-btn");
-    if (bioCloseBtn) bioCloseBtn.addEventListener("click", closeBioModal);
-
-    const nodesLayer = document.getElementById("nodes-layer");
-    if (nodesLayer) {
-        // unified pointer handling (covers mouse, touch, pen)
-        let activePointer = null;
-        nodesLayer.addEventListener("pointerdown", (e) => {
-            if (isPinching) return;
-            activePointer = { id: e.pointerId, startX: e.clientX, startY: e.clientY, moved: false };
-        });
-        nodesLayer.addEventListener("pointermove", (e) => {
-            if (activePointer && e.pointerId === activePointer.id) {
-                const dx = e.clientX - activePointer.startX;
-                const dy = e.clientY - activePointer.startY;
-                if (Math.hypot(dx, dy) > 10) {
-                    activePointer.moved = true;
-                }
-            }
-        });
-        nodesLayer.addEventListener("pointerup", (e) => {
-            if (activePointer && e.pointerId === activePointer.id) {
-                if (!activePointer.moved && Date.now() - lastCardTouchToggleAt > 420) {
-                    const toggled = handleCardToggleFromEventTarget(e.target);
-                    if (toggled) {
-                        lastCardTouchToggleAt = Date.now();
-                    }
-                }
-            }
-            activePointer = null;
-        });
-        // keep old click as fallback for devices without pointer events
-        nodesLayer.addEventListener("click", (event) => {
-            if (Date.now() - lastCardTouchToggleAt < 420) return;
-            handleCardToggleFromEventTarget(event.target);
-        });
-    }
-
 }
 
 function getViewportTargetCenter() {
@@ -979,7 +901,7 @@ function showNotice(message, type = "info") {
     };
 
     const closeBtn = card.querySelector(".notice-close");
-    if (closeBtn) closeBtn.addEventListener("click", close);
+    if (closeBtn) closeBtn.addEventListener("pointerup", close);
     host.appendChild(card);
 
     clearTimeout(noticeTimer);
@@ -1397,7 +1319,7 @@ function canAddToNode(node) {
 
 function canShowLifeStory(node) {
     if (!node) return false;
-    return node.id === "root" || node.parentId === "root";
+    return Boolean(node.bio) || node.id === "root" || node.parentId === "root";
 }
 
 function getLeafVerticalSpacing(node) {
@@ -1635,6 +1557,7 @@ function render() {
         loaderRenderDone = false;
         loaderConnectionsDone = false;
     }
+    renderCycleId += 1;
 
     const searchContext = buildSearchContext();
     const { nodeWidth, ancestryGap } = getTreeMetrics();
@@ -1712,14 +1635,14 @@ function render() {
         `) : "");
 
         const addButton = canAddToNode(n) ? `
-            <button class="add-plus add-plus-inline" onclick="event.stopPropagation(); openModal('${n.id}')" title="Кошуу">
+            <button class="add-plus add-plus-inline" type="button" data-fast-action="add" data-node-id="${n.id}" title="Кошуу">
                 <span class="add-plus-icon">+</span>
                 <span class="add-plus-text">Кошуу</span>
             </button>
         ` : "";
 
         const lifeStoryBtn = canShowLifeStory(n)
-            ? `<button class="bio-btn bio-btn-inline" onclick="event.stopPropagation(); openBioModal('${n.id}')">Өмүр баяны</button>`
+            ? `<button class="bio-btn bio-btn-inline" type="button" data-fast-action="bio" data-node-id="${n.id}">Өмүр баяны</button>`
             : "";
         const hasLifeStoryButton = Boolean(lifeStoryBtn);
         const metaActionBtn = isCompactDescendant ? addButton : (lifeStoryBtn || addButton);
@@ -1740,8 +1663,8 @@ function render() {
         const sideActions = isAdmin ? `
             <div class="node-side-actions">
                 <div class="admin-node-actions">
-                    <button class="node-icon-btn" onclick="event.stopPropagation(); openEditModal('${n.id}')" title="Өзгөртүү"><i class="fas fa-pen"></i></button>
-                    ${n.id !== "root" ? `<button class="node-icon-btn node-icon-btn-danger" onclick="event.stopPropagation(); deleteMember('${n.id}')" title="Өчүрүү"><i class="fas fa-trash"></i></button>` : ""}
+                    <button class="node-icon-btn" type="button" data-fast-action="edit" data-node-id="${n.id}" title="Өзгөртүү"><i class="fas fa-pen"></i></button>
+                    ${n.id !== "root" ? `<button class="node-icon-btn node-icon-btn-danger" type="button" data-fast-action="delete" data-node-id="${n.id}" title="Өчүрүү"><i class="fas fa-trash"></i></button>` : ""}
                 </div>
             </div>
         ` : "";
@@ -1768,7 +1691,7 @@ function render() {
                 const rootAvatar = el.querySelector(".profile-img");
                 if (rootAvatar) {
                     rootAvatar.src = mainPhoto; // bypass data-src lazy logic
-                    rootAvatar.addEventListener("click", (event) => {
+                    rootAvatar.addEventListener("pointerup", (event) => {
                         event.stopPropagation();
                         openBioModal("root");
                     });
@@ -1805,7 +1728,7 @@ function render() {
             if (n.id === "root") {
                 const rootAvatar = el.querySelector(".profile-img");
                 if (rootAvatar && !rootAvatar._rootListenerAdded) {
-                    rootAvatar.addEventListener("click", (event) => {
+                    rootAvatar.addEventListener("pointerup", (event) => {
                         event.stopPropagation();
                         openBioModal("root");
                     });
@@ -1829,7 +1752,7 @@ function render() {
             ancestryEl.innerHTML = `
                 <div class="ancestry-shell">
                     <div class="ancestry-head">
-                        <div class="ancestry-head-icon"><img src="assets/atatek.webp" alt="Толук санжыра" loading="lazy"></div>
+                        <div class="ancestry-head-icon"><img src="assets/atatek.webp" alt="Толук санжыра" loading="lazy" decoding="async"></div>
                         <div class="ancestry-head-copy">
                             <div class="ancestry-head-title">Толук санжыра</div>
                             <div class="ancestry-head-sub">Кеңири көрүү үчүн басыңыз</div>
@@ -1838,9 +1761,9 @@ function render() {
                     </div>
                 </div>
             `;
-            ancestryEl.onclick = () => {
+            ancestryEl.addEventListener("pointerup", () => {
                 openFullLineageModal();
-            };
+            });
             nodesLayer.appendChild(ancestryEl);
         }
 
@@ -1858,17 +1781,21 @@ function render() {
         loaderRenderDone = true;
     }
     updateTransform();
-    scheduleDrawConnections({ initial: !firstConnectionsDrawDone });
-    requestAnimationFrame(() => {
-        drawConnections();
+    const currentRenderCycleId = renderCycleId;
+    waitImagesLoaded(nodesLayer).then(() => {
+        if (currentRenderCycleId !== renderCycleId) return;
+        scheduleDrawConnections({ initial: !firstConnectionsDrawDone, immediate: true });
         if (loaderHidden) observeCardPhotos();
+        if (!loaderConnectionsDone) {
+            loaderConnectionsDone = true;
+        }
+        if (resolveTreeReady) resolveTreeReady();
+        tryHideLoader();
     });
     renderSearchResults();
 
-    // loader can hide immediately once at least one render has run
     if (!loaderHidden) {
         loaderRenderDone = true;
-        tryHideLoader();
     }
 }
 
@@ -2014,8 +1941,8 @@ function renderPendingList(itemsFromBackend) {
             <div class="pending-meta"><strong>Добавляемый человек:</strong> ${item.name || "-"}</div>
             <div class="pending-meta"><strong>Год рождения:</strong> ${item.year || item.bdate || "-"}</div>
             <div class="pending-actions">
-                <button class="btn-save" onclick="approvePending('${item.id}')">Сохранить</button>
-                <button class="btn-save bg-gray-600 text-white" onclick="rejectPending('${item.id}')">Удалить</button>
+                <button class="btn-save" type="button" data-pending-action="approve" data-pending-id="${item.id}">Сохранить</button>
+                <button class="btn-save bg-gray-600 text-white" type="button" data-pending-action="reject" data-pending-id="${item.id}">Удалить</button>
             </div>
         </div>
     `).join("");
@@ -2359,148 +2286,27 @@ function hasClosest(target, selector) {
     return Boolean(target && typeof target.closest === "function" && target.closest(selector));
 }
 
-document.addEventListener("mousedown", (e) => {
-    if (!hasClosest(e.target, ".node-container")
-        && !hasClosest(e.target, "#home-btn")
-        && !hasClosest(e.target, "#admin-btn")
-        && !hasClosest(e.target, "#reset-tree-btn")
-        && !hasClosest(e.target, "#share-btn")
-        && !hasClosest(e.target, "#admin-panel")
-        && !isUiOverlayTarget(e.target)) {
-        handleDown(e.clientX, e.clientY);
-    }
-}, { passive: true });
-document.addEventListener("mousemove", (e) => handleMove(e.clientX, e.clientY), { passive: true });
-document.addEventListener("mouseup", handleUp, { passive: true });
-
-document.addEventListener("touchstart", (e) => {
-    if (isUiOverlayTarget(e.target)) return;
-
-    if (e.touches.length === 2) {
-        e.preventDefault();
-        clearTimeout(viewportAnimationTimer);
-        setViewportTransition(0);
-        isPinching = true;
-        dragging = false;
-        pinchStartDistance = getTouchDistance(e.touches[0], e.touches[1]);
-        pinchStartScale = scale;
-        pinchStartPosX = posX;
-        pinchStartPosY = posY;
-        return;
-    }
-
-    if (e.touches.length === 1
-        && !hasClosest(e.target, ".node-container")
-        && !hasClosest(e.target, "#admin-panel")
-        && !hasClosest(e.target, "#reset-tree-btn")
-        && !hasClosest(e.target, "#share-btn")
-        && !isUiOverlayTarget(e.target)) {
-        handleDown(e.touches[0].clientX, e.touches[0].clientY);
-    }
-}, { passive: false });
-
-document.addEventListener("touchmove", (e) => {
-    if (isPinching && e.touches.length === 2) {
-        e.preventDefault();
-        const touchA = e.touches[0];
-        const touchB = e.touches[1];
-        const currentDistance = getTouchDistance(touchA, touchB);
-        if (pinchStartDistance > 0) {
-            const maxScale = window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT ? 2.2 : 3;
-            const nextScale = Math.min(Math.max(pinchStartScale * (currentDistance / pinchStartDistance), 0.1), maxScale);
-            const midpoint = getTouchMidpoint(touchA, touchB);
-            const worldX = (midpoint.x - pinchStartPosX) / pinchStartScale;
-            const worldY = (midpoint.y - pinchStartPosY) / pinchStartScale;
-
-            scale = nextScale;
-            posX = midpoint.x - (worldX * scale);
-            posY = midpoint.y - (worldY * scale);
-            scheduleUpdateTransform();
-        }
-        return;
-    }
-
-    if (!dragging) return;
-    e.preventDefault();
-    handleMove(e.touches[0].clientX, e.touches[0].clientY);
-}, { passive: false });
-
-document.addEventListener("touchend", (e) => {
-    if (isPinching && e.touches.length < 2) {
-        isPinching = false;
-        pinchStartDistance = 0;
-        pinchStartScale = scale;
-        pinchStartPosX = posX;
-        pinchStartPosY = posY;
-
-        if (e.touches.length === 1 && !isUiOverlayTarget(e.target)) {
-            handleDown(e.touches[0].clientX, e.touches[0].clientY);
-            return;
-        }
-    }
-    handleUp();
-});
-document.addEventListener("touchcancel", () => {
-    isPinching = false;
-    pinchStartDistance = 0;
-    handleUp();
-});
-document.addEventListener("wheel", (e) => {
-    e.preventDefault();
-    clearTimeout(viewportAnimationTimer);
-    setViewportTransition(0);
-    const maxScale = window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT ? 2.2 : 3;
-    scale = Math.min(Math.max(scale * (e.deltaY > 0 ? 0.9 : 1.1), 0.1), maxScale);
-    scheduleUpdateTransform();
-}, { passive: false });
-
-document.addEventListener("DOMContentLoaded", () => {
-    if (document.body) {
-        document.body.classList.add("loading");
-    }
-    setLoaderProgress(0, true);
-    loaderRenderDone = false;
-    loaderConnectionsDone = false;
-    loaderStartedAt = Date.now();
-    startLoaderMaxWaitTimer();
-
-    try {
-        setLoaderProgress(8, true);
-        bindStaticUiEvents();
-        initSidebarContent();
-        loadInitialLocalData();
-        render();
-        centerOnRootPerson({
-            animate: true,
-            duration: VIEWPORT_ANIMATION_MS
-        });
-        setLoaderProgress(30);
-        // do not initialize backend until firebase is explicitly requested
-        // initBackend();
-        updateAdminUi();
-        renderPendingList();
-        loaderUiReady = true;
-        setLoaderProgress(40);
-        tryHideLoader();
-    } catch (error) {
-        loaderUiReady = true;
-        loaderAuthReady = true;
-        loaderDataReady = true;
-        setLoaderProgress(100, true);
-        hideLoaderWithMinDelay(true);
-    }
-});
-
-window.addEventListener("resize", handleViewportResize, { passive: true });
-
 // lazy loader: inserts firebase scripts and initializes backend once
 function loadFirebase() {
     if (firebaseLoadPromise) return firebaseLoadPromise;
     firebaseLoadPromise = new Promise((resolve, reject) => {
         let loaded = 0;
         FIREBASE_CDN_URLS.forEach((url) => {
+            const existingScript = document.querySelector(`script[src="${url}"]`);
+            if (existingScript) {
+                loaded += 1;
+                if (loaded === FIREBASE_CDN_URLS.length) {
+                    if (!firebaseInitDone) {
+                        firebaseInitDone = true;
+                        initBackend();
+                    }
+                    resolve();
+                }
+                return;
+            }
             const s = document.createElement("script");
             s.src = url;
+            s.async = true;
             s.defer = true;
             s.onload = () => {
                 loaded += 1;
@@ -2518,135 +2324,6 @@ function loadFirebase() {
         });
     });
     return firebaseLoadPromise;
-}
-
-window.addEventListener("load", () => {
-    runDrawConnectionsFrame();
-    observeCardPhotos();
-});
-
-function openFullLineageModal() {
-    const modal = document.getElementById("bio-overlay");
-    const titleEl = document.getElementById("bio-modal-title");
-    const subtitleEl = document.getElementById("bio-modal-subtitle");
-    const photoEl = document.getElementById("bio-modal-photo");
-    const textEl = document.getElementById("bio-modal-text");
-    const ancestorsEl = document.getElementById("bio-modal-ancestors");
-    const structuredEl = document.getElementById("bio-modal-structured");
-    const sectionTitleEl = document.querySelector("#sanjyra-modal .bio-section-title");
-    if (!modal || !titleEl || !subtitleEl || !photoEl || !textEl || !ancestorsEl || !structuredEl || !sectionTitleEl) return;
-
-    titleEl.textContent = "Кыргыз санжырасы";
-    subtitleEl.textContent = "";
-    subtitleEl.style.display = "none";
-    photoEl.style.display = "none";
-    sectionTitleEl.style.display = "none";
-    textEl.style.display = "none";
-    ancestorsEl.style.display = "none";
-    ancestorsEl.textContent = "";
-    structuredEl.innerHTML = FULL_LINEAGE_MODAL_HTML;
-    renderLineageTimeline();
-    structuredEl.style.display = "block";
-    modal.style.display = "flex";
-}
-
-function openBioModal(memberId) {
-    const node = familyData.find((n) => n.id === memberId);
-    if (!node) return;
-    if (!canShowLifeStory(node)) return;
-    const modal = document.getElementById("bio-overlay");
-    if (!modal) return;
-    const photoEl = document.getElementById("bio-modal-photo");
-    const subtitleEl = document.getElementById("bio-modal-subtitle");
-    const textEl = document.getElementById("bio-modal-text");
-    const ancestors = document.getElementById("bio-modal-ancestors");
-    const sectionTitleEl = document.querySelector("#sanjyra-modal .bio-section-title");
-    if (!photoEl || !subtitleEl || !textEl || !ancestors || !sectionTitleEl) return;
-
-    const photo = node.id === "root"
-        ? rootPhoto
-        : (node.gender === "female" ? femalePhoto : (node.gender === "male" ? malePhoto : getGenderPhoto(node.name)));
-    const isRootChild = node.parentId === "root" && node.id !== "root";
-    let subtitleText = "";
-    if (node.id === "root") {
-        subtitleText = "Абдраман ата 1938 жыл\nГүлай 1940";
-    } else if (isRootChild) {
-        const partnerDate = node.partnerDate ? ` ${node.partnerDate}-жыл` : "";
-        subtitleText = node.partner
-            ? `${node.gender === "female" ? "Жолдошу" : "Жубайы"}: ${node.partner}${partnerDate}`
-            : "";
-    } else {
-        const subtitleParts = [];
-        if (node.bdate) subtitleParts.push(`${node.bdate}-жыл`);
-        if (node.partner) {
-            const partnerDate = node.partnerDate ? ` ${node.partnerDate}-жыл` : "";
-            subtitleParts.push(`${node.gender === "female" ? "Жолдошу" : "Жубайы"}: ${node.partner}${partnerDate}`);
-        }
-        subtitleText = subtitleParts.join("\n");
-    }
-
-    const titleEl = document.getElementById("bio-modal-title");
-    if (!titleEl) return;
-    titleEl.textContent = node.name;
-    sectionTitleEl.textContent = "Өмүр баяны";
-    sectionTitleEl.style.display = "block";
-    photoEl.style.display = isRootChild ? "none" : "block";
-    if (!isRootChild) {
-        photoEl.src = photo;
-        photoEl.alt = node.name;
-    }
-    subtitleEl.textContent = subtitleText;
-    subtitleEl.style.display = subtitleText ? "block" : "none";
-    const hasStructuredBiography = renderStructuredBiography(node.id);
-    textEl.style.display = hasStructuredBiography ? "none" : "block";
-    textEl.textContent = node.bio || getDefaultBio(node);
-
-    if (node.id === "root") {
-        ancestors.textContent = "Ата-тек: Адыгине → Кенчим → Жакшылык → Токобай → Карагене → Өмүрзак → Мамбет → Нурбай → Дүйшөбай → Кул → Абдраман";
-        ancestors.style.display = "block";
-    } else {
-        ancestors.textContent = "";
-        ancestors.style.display = "none";
-    }
-
-    modal.style.display = "flex";
-}
-
-function closeBioModal() {
-    const modal = document.getElementById("bio-overlay");
-    if (modal) modal.style.display = "none";
-}
-
-function renderStructuredBiography(memberId) {
-    const host = document.getElementById("bio-modal-structured");
-    if (!host) return false;
-
-    host.innerHTML = "";
-    const payload = STRUCTURED_BIOGRAPHIES[memberId];
-    if (!payload || !Array.isArray(payload.sections) || payload.sections.length === 0) {
-        host.style.display = "none";
-        return false;
-    }
-
-    payload.sections.forEach((section) => {
-        const block = document.createElement("div");
-        block.className = "bio-block";
-
-        const title = document.createElement("h4");
-        title.className = "bio-block-title";
-        title.textContent = `${section.icon || ""} ${section.title || ""}`.trim();
-
-        const text = document.createElement("p");
-        text.className = "bio-block-text";
-        text.textContent = section.text || "";
-
-        block.appendChild(title);
-        block.appendChild(text);
-        host.appendChild(block);
-    });
-
-    host.style.display = "block";
-    return true;
 }
 
 function toggleBranch(nodeId) {
@@ -2703,9 +2380,6 @@ window.rejectPending = rejectPending;
 window.openEditModal = openEditModal;
 window.deleteMember = deleteMember;
 window.saveMemberAction = saveMemberAction;
-window.openBioModal = openBioModal;
-window.openFullLineageModal = openFullLineageModal;
-window.closeBioModal = closeBioModal;
 window.resetTree = resetTree;
 window.quickShareSite = quickShareSite;
 window.centerOnRootPerson = centerOnRootPerson;

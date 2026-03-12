@@ -130,6 +130,10 @@ body.loading {
     touch-action: none;
 }
 
+.tree-container {
+    will-change: transform;
+}
+
 #tree-container:active { cursor: grabbing; }
 
 /* Preset name saved: "линия баштапкы" (restore by request). */
