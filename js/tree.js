@@ -1064,7 +1064,8 @@ async function openModal(parentId) {
     genderInput.value = "male";
 }
 
-function closeModal() {
+function closeModal(options = {}) {
+    const { recenter = false } = options;
     const overlay = document.getElementById("modal-overlay");
     const nameInput = document.getElementById("new-name");
     const dateInput = document.getElementById("new-date");
@@ -1084,6 +1085,10 @@ function closeModal() {
     genderInput.value = "male";
     memberModalMode = "add";
     editMemberId = null;
+
+    if (recenter) {
+        resetView();
+    }
 }
 
 function buildPendingPayload(name, date, gender, parentId) {
@@ -1143,6 +1148,7 @@ async function saveNewMember() {
         showNotice("Адам дароо кошулду.");
         closeModal();
         render();
+        resetView();
         return;
     }
 
@@ -1165,6 +1171,7 @@ async function saveNewMember() {
     showNotice("Маалымат админге жиберилди. Админ уруксат бергенде пайда болот.");
     closeModal();
     renderPendingList();
+    resetView();
 }
 
 function openEditModal(memberId) {
