@@ -1176,6 +1176,37 @@ button i {
     padding-right: 4px;
 }
 
+.bio-photos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.bio-photos .bio-photo {
+    width: 100%;
+    height: auto;
+    border-radius: 14px;
+    object-fit: cover;
+    margin: 0;
+}
+
+.bio-photos .bio-photo:first-child {
+    grid-column: 1 / span 2;
+}
+
+@media (max-width: 640px) {
+    .bio-photos {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+    }
+
+    .bio-photos .bio-photo:first-child {
+        grid-column: auto;
+    }
+}
+
 .bio-block {
     border: 1px solid rgba(197, 160, 89, 0.25);
     border-radius: 12px;
