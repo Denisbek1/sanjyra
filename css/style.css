@@ -42,6 +42,13 @@ body, html {
     box-sizing: border-box;
     padding: 16px;
 }
+
+#member-modal-content {
+    width: 208px;
+    max-width: 58.5vw;
+    max-height: 52vh;
+    padding: 10px;
+}
 #member-modal-content input,
 #member-modal-content select {
     width: 100%;
@@ -1208,6 +1215,13 @@ button i {
 }
 
 @media (max-width: 640px) {
+    #member-modal-content {
+        width: 208px;
+        max-width: 58.5vw;
+        max-height: 52vh;
+        padding: 10px;
+    }
+
     .bio-photos {
         grid-template-columns: 1fr;
         grid-template-rows: auto;
