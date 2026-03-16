@@ -2053,6 +2053,49 @@ textarea:focus { border-color: var(--accent-gold); }
     }
 }
 @media (max-width: 768px) {
+    .node-container {
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
+        backdrop-filter: blur(8px);
+    }
+
+    .node-ancestry-card {
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .connector-inner {
+        filter: drop-shadow(0 0 3px rgba(244, 215, 157, 0.4));
+    }
+
+    .bio-modal,
+    .notice-card {
+        box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
+    }
+
+    #mobile-sidebar {
+        box-shadow: 16px 0 26px rgba(0, 0, 0, 0.35);
+    }
+
+    #home-btn,
+    #reset-tree-btn,
+    #share-btn,
+    #mobile-menu-btn,
+    .sidebar-close {
+        width: 44px;
+        height: 44px;
+    }
+
+    .bio-btn-inline,
+    .add-plus-inline {
+        position: relative;
+    }
+
+    .bio-btn-inline::after,
+    .add-plus-inline::after {
+        content: "";
+        position: absolute;
+        inset: -8px;
+    }
+
     #sidebar-overlay {
         background: rgba(0, 0, 0, 0.6);
     }

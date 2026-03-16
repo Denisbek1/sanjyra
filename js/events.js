@@ -13,6 +13,14 @@ function addFastPressListener(element, handler) {
     });
 }
 
+const TAP_MOVE_PX = 18;
+const TAP_MAX_DURATION_MS = 450;
+const DRAG_START_PX = 12;
+
+function isCardControlTarget(target) {
+    return Boolean(target && target.closest && target.closest(".add-plus-inline, .bio-btn-inline, .node-icon-btn"));
+}
+
 function bindStaticUiEvents() {
     const mobileMenuBtn = document.getElementById("mobile-menu-btn");
     addFastPressListener(mobileMenuBtn, openSidebar);
@@ -129,10 +137,14 @@ function bindStaticUiEvents() {
 
         nodesLayer.addEventListener("pointerdown", (event) => {
             if (isPinching) return;
+            const isControl = isCardControlTarget(event.target);
             activePointer = {
                 id: event.pointerId,
                 startX: event.clientX,
                 startY: event.clientY,
+                startTime: Date.now(),
+                allowDrag: !isControl,
+                dragging: false,
                 moved: false
             };
         });
@@ -141,7 +153,15 @@ function bindStaticUiEvents() {
             if (activePointer && event.pointerId === activePointer.id) {
                 const dx = event.clientX - activePointer.startX;
                 const dy = event.clientY - activePointer.startY;
-                if (Math.hypot(dx, dy) > 10) activePointer.moved = true;
+                const dist = Math.hypot(dx, dy);
+                if (dist > TAP_MOVE_PX) activePointer.moved = true;
+                if (activePointer.allowDrag && dist > DRAG_START_PX) {
+                    if (!activePointer.dragging) {
+                        handleDown(event.clientX, event.clientY);
+                        activePointer.dragging = true;
+                    }
+                    handleMove(event.clientX, event.clientY);
+                }
             }
         });
 
@@ -160,12 +180,26 @@ function bindStaticUiEvents() {
             }
 
             if (activePointer && event.pointerId === activePointer.id) {
-                if (!activePointer.moved && Date.now() - lastCardTouchToggleAt > 420) {
+                const duration = Date.now() - activePointer.startTime;
+                const dx = event.clientX - activePointer.startX;
+                const dy = event.clientY - activePointer.startY;
+                const dist = Math.hypot(dx, dy);
+                const isTap = (!activePointer.moved && dist <= TAP_MOVE_PX)
+                    || (dist <= TAP_MOVE_PX * 1.4 && duration <= TAP_MAX_DURATION_MS);
+                if (activePointer.dragging) {
+                    handleUp();
+                }
+                if (isTap && Date.now() - lastCardTouchToggleAt > 420) {
                     const toggled = handleCardToggleFromEventTarget(event.target);
                     if (toggled) lastCardTouchToggleAt = Date.now();
                 }
             }
             activePointer = null;
+        });
+
+        nodesLayer.addEventListener("pointercancel", () => {
+            activePointer = null;
+            handleUp();
         });
     }
 }
@@ -202,11 +236,11 @@ document.addEventListener("touchstart", (event) => {
     }
 
     if (event.touches.length === 1
-        && !hasClosest(event.target, ".node-container")
         && !hasClosest(event.target, "#admin-panel")
         && !hasClosest(event.target, "#reset-tree-btn")
         && !hasClosest(event.target, "#share-btn")
-        && !isUiOverlayTarget(event.target)) {
+        && !isUiOverlayTarget(event.target)
+        && !isCardControlTarget(event.target)) {
         handleDown(event.touches[0].clientX, event.touches[0].clientY);
     }
 }, { passive: false });
@@ -261,6 +295,8 @@ document.addEventListener("touchcancel", () => {
 });
 
 document.addEventListener("wheel", (event) => {
+    if (isUiOverlayTarget(event.target)) return;
+    if (!event.target || !event.target.closest || !event.target.closest("#tree-container")) return;
     event.preventDefault();
     clearTimeout(viewportAnimationTimer);
     setViewportTransition(0);

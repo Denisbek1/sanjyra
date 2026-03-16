@@ -115,82 +115,7 @@ const sidebarAncestryExtraText = [
     "Бул жерде негизги ата-тек менен бирге урпактардын таралышы, үй-бүлө бутактары жана кийинки муундардын байланышы көрсөтүлөт.",
     "(Скобкадагы жана кошумча маалыматтар дагы толукталып турат.)",
 ].join(" ");
-const STRUCTURED_BIOGRAPHIES = {
-    su: {
-        sections: [
-                          
-            {
-                icon: "📍",
-                title: "Туулган жери",
-                text: "Кулов Суйорбек Абдраманович 1980-жылдын 13-январында Ош облусунун Алай районуна караштуу Нура айылында жарык дүйнөгө келген. Ал Абдраман ата менен Гүлай апанын үй-бүлөсүндө тарбияланып өскөн. Үй-бүлөдө он бир тууган болуп, беш уул жана беш кыз бир туугандардын арасында чоңоюп өскөн. Суйорбек үй-бүлөдөгү кенжеден бир мурунку бала болуп эсептелет. Балалык жана өспүрүм курагы Нура айылында өтүп, айылдын табияты, эмгекке болгон тарбия жана улууларга болгон урмат анын мүнөзүнүн калыптанышына чоң таасир берген."
-            },
-            {
-                icon: "🎓",
-                title: "Билими",
-                text: "Алгачкы билимди Нура айылындагы мектептен алып, 1-класстан 8-класска чейин Нура айылында окуган. Андан кийин билимин улантуу үчүн Алай районундагы Терек айылындагы мектепке барып, 9-11-класстарды ошол жерде аяктаган.\n\nМектепти бүтүргөндөн кийин жогорку билим алуу максатында 1999-жылы Ош шаарындагы Ош технологиялык университетине (ОшТУ) тапшырып, экология багыты боюнча билим алган. Университетте беш жыл окуп, жогорку билим тууралуу дипломго ээ болгон."
-            },
-            {
-                icon: "👨‍👩‍👧‍👦",
-                title: "Үй-бүлөсү",
-                text: "2003-жылдын 11-октябрында Суйорбек жубайы Нурпери менен баш кошуп, үй-бүлөлүк жашоосун баштаган.\n\nЖаш үй-бүлө алгач Терек айылында жашап, кийин Нура айылына көчүп келип жашоосун улантышкан.\n\nБул үй-бүлөдө беш бала тарбияланып өсүүдө:\n\nДенис — 2005-жылы төрөлгөн\nЭлиза — 2006-жылы төрөлгөн\nНуриза — 2006-жылы төрөлгөн (эгиз)\nАйзирек — 2012-жылы төрөлгөн\nТолкунбек — 2016-жылы төрөлгөн\n\nЖубайы Нурпери кесиби боюнча медицина кызматкери болгону менен, негизинен үй-бүлөсүнө кам көрүп, балдарды тарбиялоо менен алектенип келет."
-            },
-            {
-                icon: "🚛",
-                title: "Ишмердүүлүгү",
-                text: "Суйорбек жаш кезинен тартып эмгекчилдиги жана жоопкерчиликтүүлүгү менен айырмаланып келген. 2005-2010-жылдары Кытай менен Кыргызстандын чек арасындагы Эркечтам өткөрмө бекетинде BAYBOTO компаниясында иштеп, Кытай тарап менен байланыш жүргүзгөн өкүл болуп эмгектенген. Кийин бул ишкана ишин токтоткондон кийин жүк ташуу тармагына өтүп, КАМАЗ үлгүсүндөгү жүк ташуучу унаа сатып алып, алыскы жолдордо жүк ташуучу айдоочу болуп иштей баштаган. 2014-2018-жылдары ABU SAXIY компаниясында иштеп, Кытайдан Ош шаарына жүк ташыган фура айдоочу болуп эмгектенген. Бул тармакта көп жылдык тажрыйба топтоп, өз ишин мыкты билген айдоочулардын бири болуп калыптанган."
-            },
-            {
-                icon: "🏡",
-                title: "Азыркы жашоосу",
-                text: "2019-жылы үй-бүлөсү менен Ош шаарына караштуу Мады айылына көчүп келип, ошол жерде жашап калышкан. Балдары ошол жерде билим алып, өсүп келе жатышат. Ошол эле жылы Суйорбек жеке жүк ташуучу унаа сатып алып, жеке ишкер катары иштей баштаган. Азыркы учурда жеке фура айдап, жүк ташуу менен алектенип, үй-бүлөсүн адал эмгеги менен камсыз кылып келет. Ал эмгекчил, үй-бүлөсүнө камкор, жоопкерчиликтүү жана адамдарга жардам берүүгө даяр инсан катары таанылат. Бош убактысында аңчылыкка кызыгып, айыл чарба иштерине да көңүл бурат. Үйүнүн айланасында жер иштетип, дыйканчылык менен алектенип келет жана техникага кызыгып, унаалар менен иштөөнү жакшы көрөт."
-            }
-        ]
-    },
-    cho: {
-        sections: [
-            {
-                icon: "📜",
-                title: "Кулов Чолпонбай Абдраманович",
-                text: "Жубайы: Гүльмира"
-            },
-            {
-                icon: "📍",
-                title: "Туулган жери",
-                text: "Кулов Чолпонбай Абдраманович 1972-жылы 22-мартта Ош облусунун Алай районуна караштуу Сопу-Коргон айылында жарык дүйнөгө келген.\n\nАл көп балалуу үй-бүлөдө чоңоюп, он бир туугандын ичинде алтынчы болуп төрөлгөн.\n\nҮй-бүлөдө беш уул жана беш кыз бир туугандары менен бирге өсүп, бала кезинен тартып эмгекке жана жоопкерчиликке тарбияланган.\n\nТоолуу Алай аймагынын табияты, жайлоолору жана айыл турмушу анын мүнөзүнүн калыптанышына чоң таасир берген."
-            },
-            {
-                icon: "🎓",
-                title: "Билими",
-                text: "1979-жылы мектеп босогосун аттап билим ала баштаган.\n\n1989-жылы Ош облусунун Алай районуна караштуу Нура айылындагы А. Беценный атындагы орто мектебин ийгиликтүү аяктаган."
-            },
-            {
-                icon: "🐑",
-                title: "Эмгек жолу",
-                text: "Чолпонбай жаш кезинен тартып фермерлик жана мал чарбачылыгы менен алектенип келет.\n\nАл төрт түлүк мал багып, ата-бабадан калган мал чарбачылык салтын улантып келет.\n\nЧолпонбай атасынын жолун улап, мал чарбачылыгын өнүктүрүп, бул тармакта чоң тажрыйба топтогон.\n\nЧолпонбайдын жашоосунун чоң бөлүгү жайлоодогу турмуш менен байланыштуу.\n\nЖай мезгили келгенде ал малдарын Алайдагы кооз жайлоолордун бири болгон Айланма жайлоосуна алып чыгып багат.\n\nАйланма жайлоосу кең жайыттары, таза абасы жана кооз жаратылышы менен белгилүү.\n\nЖыл сайын туугандары жана жакындары ошол жайлоого барып, табият койнунда эс алып, бирге убакыт өткөрүп турушат.\n\nМындан тышкары Көк-Суу жайлоосу да анын жашоосунда өзгөчө орунду ээлейт. Бул жерде жай мезгилинен тышкаркы мезгилдерде да төрт түлүк малдын камы көрүлөт."
-            },
-            {
-                icon: "👨‍👩‍👧‍👦",
-                title: "Үй-бүлөсү",
-                text: "1991-жылы 8-июлда жубайы Гүльмира менен баш кошуп, үй-бүлөлүк жашоосун баштаган.\n\nБул үй-бүлөдө үч уул жана эки кыз тарбияланып өскөн.\n\nБалдары:\n\n• Бегимай — 1994\n• Муктарбек — 1999\n• Куштарбек — 2001\n• Мыктыбек — 2003\n• Кулпунай — 2005\n\nУчурда Чолпонбай жана Гүльмира сегиз неберенин мээримдүү чоң ата, чоң энеси болуп келишет."
-            },
-            {
-                icon: "👶",
-                title: "Неберелери",
-                text: "• Нуржайна\n• Аяна\n• Сыргабай\n• Барсбек\n• Аруужан\n• Фатима"
-            },
-            {
-                icon: "🤝",
-                title: "Эл ичиндеги аброю",
-                text: "Чолпонбай айыл ичинде кадыр-барктуу жана ишенимдүү адам катары белгилүү.\n\nАнын эмгекчилдиги, жөнөкөйлүгү жана адамдарга жардам берүүгө даярдыгы үчүн айылдаштары жана туугандары аны урматташат.\n\nМал чарбачылыгы боюнча чоң тажрыйбасы бар болгондуктан, көптөр ага кеңеш сурап кайрылышат.\n\nАл табият менен жашоону жакшы көргөн, мал чарбасын мыкты билген, үй-бүлөсүнө камкор жана туугандарына жардам берүүгө дайыма даяр инсан катары таанылат."
-            },
-            {
-                icon: "🏡",
-                title: "Азыркы жашоосу",
-                text: "Азыркы учурда Чолпонбай үй-бүлөсү менен Ош облусунун Алай районуна караштуу Терек айылында жашайт.\n\nАл фермерлик ишин улантып, төрт түлүк мал багуу менен алектенип, үй-бүлөсүн адал эмгеги менен камсыз кылып келет.\n\nЖай мезгили келгенде малдары менен жайлоого чыгып, тоолордун кооз жаратылышында эмгектенип жашоосун улантат."
-            }
-        ]
-    }
-};
+const STRUCTURED_BIOGRAPHIES = window.STRUCTURED_BIOGRAPHIES || {};
 
 const APPROVED_STORAGE_KEY = "sanjyra_approved_members";
 const PENDING_STORAGE_KEY = "sanjyra_pending_members";
@@ -889,17 +814,30 @@ function initSidebarContent() {
 function showNotice(message, type = "info") {
     const host = document.getElementById("notice-host");
     if (!host) return;
-    host.innerHTML = "";
+    host.textContent = "";
 
     const card = document.createElement("div");
     card.className = `notice-card ${type === "error" ? "is-error" : ""}`;
-    card.innerHTML = `
-        <div class="notice-icon">
-            <i class="fas ${type === "error" ? "fa-exclamation" : "fa-check"}"></i>
-        </div>
-        <div class="notice-text">${message}</div>
-        <button class="notice-close" type="button">Жабуу</button>
-    `;
+
+    const iconWrap = document.createElement("div");
+    iconWrap.className = "notice-icon";
+    const icon = document.createElement("i");
+    icon.className = `fas ${type === "error" ? "fa-exclamation" : "fa-check"}`;
+    icon.setAttribute("aria-hidden", "true");
+    iconWrap.appendChild(icon);
+
+    const text = document.createElement("div");
+    text.className = "notice-text";
+    text.textContent = message || "";
+
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "notice-close";
+    closeBtn.type = "button";
+    closeBtn.textContent = "Жабуу";
+
+    card.appendChild(iconWrap);
+    card.appendChild(text);
+    card.appendChild(closeBtn);
 
     const close = () => {
         card.classList.add("is-hide");
@@ -908,7 +846,6 @@ function showNotice(message, type = "info") {
         }, 180);
     };
 
-    const closeBtn = card.querySelector(".notice-close");
     if (closeBtn) closeBtn.addEventListener("pointerup", close);
     host.appendChild(card);
 
@@ -1337,6 +1274,80 @@ function canShowLifeStory(node) {
     return Boolean(node.bio) || node.id === "root" || node.parentId === "root";
 }
 
+function createIcon(className) {
+    const icon = document.createElement("i");
+    icon.className = className;
+    icon.setAttribute("aria-hidden", "true");
+    return icon;
+}
+
+function setText(el, value) {
+    if (!el) return;
+    el.textContent = value == null ? "" : String(value);
+}
+
+function createAddButton(nodeId) {
+    const btn = document.createElement("button");
+    btn.className = "add-plus add-plus-inline";
+    btn.type = "button";
+    btn.dataset.fastAction = "add";
+    btn.dataset.nodeId = nodeId;
+    btn.title = "Кошуу";
+
+    const icon = document.createElement("span");
+    icon.className = "add-plus-icon";
+    icon.textContent = "+";
+
+    const text = document.createElement("span");
+    text.className = "add-plus-text";
+    text.textContent = "Кошуу";
+
+    btn.appendChild(icon);
+    btn.appendChild(text);
+    return btn;
+}
+
+function createBioButton(nodeId) {
+    const btn = document.createElement("button");
+    btn.className = "bio-btn bio-btn-inline";
+    btn.type = "button";
+    btn.dataset.fastAction = "bio";
+    btn.dataset.nodeId = nodeId;
+    btn.textContent = "Өмүр баяны";
+    return btn;
+}
+
+function createAdminActions(nodeId) {
+    const wrap = document.createElement("div");
+    wrap.className = "node-side-actions";
+    const adminWrap = document.createElement("div");
+    adminWrap.className = "admin-node-actions";
+
+    const editBtn = document.createElement("button");
+    editBtn.className = "node-icon-btn";
+    editBtn.type = "button";
+    editBtn.dataset.fastAction = "edit";
+    editBtn.dataset.nodeId = nodeId;
+    editBtn.title = "Өзгөртүү";
+    editBtn.appendChild(createIcon("fas fa-pen"));
+
+    adminWrap.appendChild(editBtn);
+
+    if (nodeId !== "root") {
+        const delBtn = document.createElement("button");
+        delBtn.className = "node-icon-btn node-icon-btn-danger";
+        delBtn.type = "button";
+        delBtn.dataset.fastAction = "delete";
+        delBtn.dataset.nodeId = nodeId;
+        delBtn.title = "Өчүрүү";
+        delBtn.appendChild(createIcon("fas fa-trash"));
+        adminWrap.appendChild(delBtn);
+    }
+
+    wrap.appendChild(adminWrap);
+    return wrap;
+}
+
 function getLeafVerticalSpacing(node) {
     // reduce vertical spacing to match smaller card height
     if (!node) return 150;
@@ -1644,126 +1655,117 @@ function render() {
         const mainPhoto = n.id === "root"
             ? rootPhoto
             : (n.gender === "female" ? femalePhoto : (n.gender === "male" ? malePhoto : getGenderPhoto(n.name)));
-        const indicator = hasChildren(n.id) ? '<i class="fas fa-chevron-right has-children-indicator"></i>' : "";
+        const hasChildrenIndicator = hasChildren(n.id);
 
-        const partnerTitle = n.gender === "female" ? "Жолдошу" : "Жубайы";
-        const partnerContent = isCompactDescendant ? "" : (n.partner ? (isRootCard ? `
-            <div class="mt-1 pt-1 border-t border-white/10 flex flex-col leading-tight">
-                <div class="partner-label">Жубайы</div>
-                <div class="name-text partner-name-primary">Гүлай</div>
-                <div class="partner-date">${n.partnerDate ? n.partnerDate + "-жыл" : ""}</div>
-            </div>
-        ` : `
-            <div class="mt-1 pt-1 border-t border-white/10 flex flex-col leading-tight">
-                <div class="partner-line"><span class="partner-label">${partnerTitle}:</span> <span class="partner-name">${n.partner}</span></div>
-                <div class="partner-date">${n.partnerDate ? n.partnerDate + "-жыл" : ""}</div>
-            </div>
-        `) : "");
-
-        const addButton = canAddToNode(n) ? `
-            <button class="add-plus add-plus-inline" type="button" data-fast-action="add" data-node-id="${n.id}" title="Кошуу">
-                <span class="add-plus-icon">+</span>
-                <span class="add-plus-text">Кошуу</span>
-            </button>
-        ` : "";
-
-        const lifeStoryBtn = canShowLifeStory(n)
-            ? `<button class="bio-btn bio-btn-inline" type="button" data-fast-action="bio" data-node-id="${n.id}">Өмүр баяны</button>`
-            : "";
+        const addButton = canAddToNode(n) ? createAddButton(n.id) : null;
+        const lifeStoryBtn = canShowLifeStory(n) ? createBioButton(n.id) : null;
         const hasLifeStoryButton = Boolean(lifeStoryBtn);
-        const metaActionBtn = isCompactDescendant ? addButton : (lifeStoryBtn || addButton);
-        const metaContent = isRootCard
-            ? `
-                <div class="card-meta-row">
-                    <div class="date-text">${bDateStr}</div>
-                    ${metaActionBtn}
-                </div>
-            `
-            : `
-                <div class="card-meta-stack">
-                    <div class="date-text">${bDateStr}</div>
-                    ${metaActionBtn}
-                </div>
-            `;
+        const metaActionEl = isCompactDescendant ? addButton : (lifeStoryBtn || addButton);
 
-        const sideActions = isAdmin ? `
-            <div class="node-side-actions">
-                <div class="admin-node-actions">
-                    <button class="node-icon-btn" type="button" data-fast-action="edit" data-node-id="${n.id}" title="Өзгөртүү"><i class="fas fa-pen"></i></button>
-                    ${n.id !== "root" ? `<button class="node-icon-btn node-icon-btn-danger" type="button" data-fast-action="delete" data-node-id="${n.id}" title="Өчүрүү"><i class="fas fa-trash"></i></button>` : ""}
-                </div>
-            </div>
-        ` : "";
+        let partnerContent = null;
+        if (!isCompactDescendant && n.partner) {
+            const partnerTitle = n.gender === "female" ? "Жолдошу" : "Жубайы";
+            const partnerWrap = document.createElement("div");
+            partnerWrap.className = "mt-1 pt-1 border-t border-white/10 flex flex-col leading-tight";
 
-        if (!reused) {
-            el.innerHTML = `
-                <img src="${IMAGE_PLACEHOLDER_SRC}" data-src="${mainPhoto}" class="profile-img" loading="lazy" decoding="async" />
-                <div class="node-main-content">
-                    <div class="flex items-center mb-1">
-                        <div class="name-text">${n.name}</div>
-                        ${indicator}
-                    </div>
-                    ${metaContent}
-                    ${partnerContent}
-                </div>
-                ${sideActions}
-            `;
-            if (hasLifeStoryButton) {
-                el.classList.add("has-bio-button");
-            }
-
-            // ensure root avatar always loads immediately (not lazy)
-            if (n.id === "root") {
-                const rootAvatar = el.querySelector(".profile-img");
-                if (rootAvatar) {
-                    rootAvatar.src = mainPhoto; // bypass data-src lazy logic
-                    rootAvatar.addEventListener("pointerup", (event) => {
-                        event.stopPropagation();
-                        openBioModal("root");
-                    });
-                }
-            }
-
-            nodesLayer.appendChild(el);
-        } else {
-            // update photo attributes if changed
-            const img = el.querySelector(".profile-img");
-            if (img) {
-                img.dataset.src = mainPhoto;
-                if (img.dataset.loaded === "true") img.src = mainPhoto;
-            }
-            // update name and indicator were handled earlier
-            // update meta and partner area and side actions
-            const contentWrapper = el.querySelector(".node-main-content");
-            if (contentWrapper) {
-                contentWrapper.innerHTML = `
-                    <div class="flex items-center mb-1">
-                        <div class="name-text">${n.name}</div>
-                        ${indicator}
-                    </div>
-                    ${metaContent}
-                    ${partnerContent}
-                `;
-            }
-            if (hasLifeStoryButton) {
-                el.classList.add("has-bio-button");
+            if (isRootCard) {
+                const label = document.createElement("div");
+                label.className = "partner-label";
+                label.textContent = "Жубайы";
+                const name = document.createElement("div");
+                name.className = "name-text partner-name-primary";
+                setText(name, n.partner || "Гүлай");
+                const date = document.createElement("div");
+                date.className = "partner-date";
+                setText(date, n.partnerDate ? `${n.partnerDate}-жыл` : "");
+                partnerWrap.appendChild(label);
+                partnerWrap.appendChild(name);
+                partnerWrap.appendChild(date);
             } else {
-                el.classList.remove("has-bio-button");
+                const line = document.createElement("div");
+                line.className = "partner-line";
+                const label = document.createElement("span");
+                label.className = "partner-label";
+                label.textContent = `${partnerTitle}:`;
+                const name = document.createElement("span");
+                name.className = "partner-name";
+                setText(name, n.partner);
+                line.appendChild(label);
+                line.appendChild(document.createTextNode(" "));
+                line.appendChild(name);
+
+                const date = document.createElement("div");
+                date.className = "partner-date";
+                setText(date, n.partnerDate ? `${n.partnerDate}-жыл` : "");
+                partnerWrap.appendChild(line);
+                partnerWrap.appendChild(date);
             }
-            // ensure root avatar click listener exists
-            if (n.id === "root") {
-                const rootAvatar = el.querySelector(".profile-img");
-                if (rootAvatar && !rootAvatar._rootListenerAdded) {
-                    rootAvatar.addEventListener("pointerup", (event) => {
-                        event.stopPropagation();
-                        openBioModal("root");
-                    });
-                    rootAvatar._rootListenerAdded = true;
-                }
+            partnerContent = partnerWrap;
+        }
+
+        const img = el.querySelector(".profile-img") || document.createElement("img");
+        img.className = "profile-img";
+        img.loading = "lazy";
+        img.decoding = "async";
+        if (isRootCard) {
+            img.src = mainPhoto;
+            img.dataset.loaded = "true";
+            img.removeAttribute("data-src");
+        } else {
+            img.dataset.src = mainPhoto;
+            if (img.dataset.loaded === "true") {
+                img.src = mainPhoto;
+            } else {
+                img.src = IMAGE_PLACEHOLDER_SRC;
             }
-            if (!nodesLayer.contains(el)) {
-                nodesLayer.appendChild(el);
-            }
+        }
+
+        const mainContent = document.createElement("div");
+        mainContent.className = "node-main-content";
+
+        const nameRow = document.createElement("div");
+        nameRow.className = "flex items-center mb-1";
+        const nameText = document.createElement("div");
+        nameText.className = "name-text";
+        setText(nameText, n.name);
+        nameRow.appendChild(nameText);
+        if (hasChildrenIndicator) {
+            nameRow.appendChild(createIcon("fas fa-chevron-right has-children-indicator"));
+        }
+        mainContent.appendChild(nameRow);
+
+        const meta = document.createElement("div");
+        meta.className = isRootCard ? "card-meta-row" : "card-meta-stack";
+        const dateText = document.createElement("div");
+        dateText.className = "date-text";
+        setText(dateText, bDateStr);
+        meta.appendChild(dateText);
+        if (metaActionEl) meta.appendChild(metaActionEl);
+        mainContent.appendChild(meta);
+
+        if (partnerContent) {
+            mainContent.appendChild(partnerContent);
+        }
+
+        const sideActions = isAdmin ? createAdminActions(n.id) : null;
+        el.replaceChildren(img, mainContent, ...(sideActions ? [sideActions] : []));
+
+        if (hasLifeStoryButton) {
+            el.classList.add("has-bio-button");
+        } else {
+            el.classList.remove("has-bio-button");
+        }
+
+        if (isRootCard && !img._rootListenerAdded) {
+            img.addEventListener("pointerup", (event) => {
+                event.stopPropagation();
+                openBioModal("root");
+            });
+            img._rootListenerAdded = true;
+        }
+
+        if (!nodesLayer.contains(el)) {
+            nodesLayer.appendChild(el);
         }
 
         if (n.id === "root" && !searchContext) {
@@ -1959,22 +1961,67 @@ function renderPendingList(itemsFromBackend) {
         list = pendingLocal;
     }
 
+    wrap.textContent = "";
+
     if (!list.length) {
-        wrap.innerHTML = '<div class="pending-item no-requests">Жаңы заявка жок.</div>';
+        const empty = document.createElement("div");
+        empty.className = "pending-item no-requests";
+        empty.textContent = "Жаңы заявка жок.";
+        wrap.appendChild(empty);
         return;
     }
 
-    wrap.innerHTML = list.map((item) => `
-        <div class="pending-item">
-            <div class="pending-meta"><strong>Родитель:</strong> ${item.parentName || getParentDisplayName(item.parentId, "") || "-"}</div>
-            <div class="pending-meta"><strong>Добавляемый человек:</strong> ${item.name || "-"}</div>
-            <div class="pending-meta"><strong>Год рождения:</strong> ${item.year || item.bdate || "-"}</div>
-            <div class="pending-actions">
-                <button class="btn-save" type="button" data-pending-action="approve" data-pending-id="${item.id}">Сохранить</button>
-                <button class="btn-save bg-gray-600 text-white" type="button" data-pending-action="reject" data-pending-id="${item.id}">Удалить</button>
-            </div>
-        </div>
-    `).join("");
+    list.forEach((item) => {
+        const row = document.createElement("div");
+        row.className = "pending-item";
+
+        const metaParent = document.createElement("div");
+        metaParent.className = "pending-meta";
+        const metaParentLabel = document.createElement("strong");
+        metaParentLabel.textContent = "Родитель:";
+        metaParent.appendChild(metaParentLabel);
+        metaParent.appendChild(document.createTextNode(` ${item.parentName || getParentDisplayName(item.parentId, "") || "-"}`));
+
+        const metaName = document.createElement("div");
+        metaName.className = "pending-meta";
+        const metaNameLabel = document.createElement("strong");
+        metaNameLabel.textContent = "Добавляемый человек:";
+        metaName.appendChild(metaNameLabel);
+        metaName.appendChild(document.createTextNode(` ${item.name || "-"}`));
+
+        const metaYear = document.createElement("div");
+        metaYear.className = "pending-meta";
+        const metaYearLabel = document.createElement("strong");
+        metaYearLabel.textContent = "Год рождения:";
+        metaYear.appendChild(metaYearLabel);
+        metaYear.appendChild(document.createTextNode(` ${item.year || item.bdate || "-"}`));
+
+        const actions = document.createElement("div");
+        actions.className = "pending-actions";
+
+        const approveBtn = document.createElement("button");
+        approveBtn.className = "btn-save";
+        approveBtn.type = "button";
+        approveBtn.dataset.pendingAction = "approve";
+        approveBtn.dataset.pendingId = item.id;
+        approveBtn.textContent = "Сохранить";
+
+        const rejectBtn = document.createElement("button");
+        rejectBtn.className = "btn-save bg-gray-600 text-white";
+        rejectBtn.type = "button";
+        rejectBtn.dataset.pendingAction = "reject";
+        rejectBtn.dataset.pendingId = item.id;
+        rejectBtn.textContent = "Удалить";
+
+        actions.appendChild(approveBtn);
+        actions.appendChild(rejectBtn);
+
+        row.appendChild(metaParent);
+        row.appendChild(metaName);
+        row.appendChild(metaYear);
+        row.appendChild(actions);
+        wrap.appendChild(row);
+    });
 }
 
 async function adminSignIn() {
