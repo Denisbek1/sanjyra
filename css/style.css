@@ -454,8 +454,8 @@ body.loading {
     align-items: flex-start;
     gap: 3px;
 }
-.card-meta-stack .bio-btn-inline,
 .card-meta-stack .add-plus-inline {
+    position: relative;
     align-self: flex-start;
 }
 .partner-line { line-height: 1.25; }
@@ -1888,6 +1888,7 @@ textarea:focus { border-color: var(--accent-gold); }
     }
 
     .bio-btn-inline {
+        position: absolute;
         left: 7px;
         bottom: 5px;
         font-size: 0.5rem;
@@ -2089,7 +2090,6 @@ textarea:focus { border-color: var(--accent-gold); }
         height: 44px;
     }
 
-    .bio-btn-inline::after,
     .add-plus-inline::after {
         content: "";
         position: absolute;

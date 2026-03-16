@@ -184,7 +184,7 @@ function bindStaticUiEvents() {
             }
 
             const actionTarget = event.target && event.target.closest ? event.target.closest("[data-fast-action]") : null;
-            if (actionTarget) {
+            if (actionTarget && isCardControlTarget(event.target)) {
                 event.stopPropagation();
                 const action = actionTarget.dataset.fastAction;
                 const nodeId = actionTarget.dataset.nodeId;
