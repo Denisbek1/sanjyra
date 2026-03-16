@@ -12,8 +12,8 @@ function addFastPressListener(element, handler) {
     });
 }
 
-const TAP_MOVE_PX = 35; // Увеличили зону прощения дрожания пальца!
-const TAP_MAX_DURATION_MS = 500; // Даем чуть больше времени на нажатие
+const TAP_MOVE_PX = 8; // Увеличили зону прощения дрожания пальца!
+const TAP_MAX_DURATION_MS = 220; // Даем чуть больше времени на нажатие
 const DRAG_START_PX = 20; // Дерево сдвинется только при уверенном движении
 
 function isCardControlTarget(target) {
