@@ -147,7 +147,7 @@ function bindStaticUiEvents() {
     const bioCloseBtn = document.getElementById("bio-close-btn");
     addFastPressListener(bioCloseBtn, closeBioModal);
 
-    const dragLayer = document.getElementById("drag-layer");
+    const dragLayer = document.getElementById("tree-container");
     if (dragLayer) {
         let activePointer = null;
 
@@ -161,19 +161,10 @@ function bindStaticUiEvents() {
                 startX: event.clientX,
                 startY: event.clientY,
                 startTime: Date.now(),
-                allowDrag: true,
+                allowDrag: false,
                 dragging: false,
                 moved: false
             };
-
-            handleDown(event.clientX, event.clientY);
-            if (typeof dragLayer.setPointerCapture === "function") {
-                try {
-                    dragLayer.setPointerCapture(event.pointerId);
-                } catch (error) {
-                    // ignore capture errors (e.g., unsupported or invalid pointer)
-                }
-            }
         });
 
         document.addEventListener("pointermove", (event) => {
@@ -182,8 +173,19 @@ function bindStaticUiEvents() {
                 const dy = event.clientY - activePointer.startY;
                 const dist = Math.hypot(dx, dy);
                 if (dist > TAP_MOVE_PX) activePointer.moved = true;
-                if (activePointer.allowDrag && dist > DRAG_START_PX) {
+                if (dist > DRAG_START_PX && !activePointer.allowDrag) {
+                    activePointer.allowDrag = true;
                     activePointer.dragging = true;
+                    handleDown(activePointer.startX, activePointer.startY);
+                    if (typeof dragLayer.setPointerCapture === "function") {
+                        try {
+                            // dragLayer.setPointerCapture(event.pointerId);
+                        } catch (error) {
+                            // ignore capture errors (e.g., unsupported or invalid pointer)
+                        }
+                    }
+                }
+                if (activePointer.allowDrag) {
                     handleMove(event.clientX, event.clientY);
                 }
             }
