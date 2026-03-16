@@ -163,9 +163,8 @@ function bindStaticUiEvents() {
                 dragging: false,
                 moved: false
             };
-            if (!isControl) {
-                handleDown(event.clientX, event.clientY);
-            }
+            if (isControl) return;
+            handleDown(event.clientX, event.clientY);
         });
 
         treeContainer.addEventListener("pointermove", (event) => {

@@ -10,6 +10,13 @@
     --card-width-non-root-mobile: 170px;
 }
 
+html, body {
+    height: 100%;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
+
 body, html {
     margin: 0; padding: 0;
     width: 100%; height: 100%;
@@ -141,7 +148,9 @@ body.loading {
 }
 
 #tree-container {
-    position: absolute;
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%; height: 100%;
     transform-origin: 0 0;
     transform: translateZ(0);
