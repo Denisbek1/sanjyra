@@ -1897,17 +1897,11 @@ function resetTree() {
 function updateTransform() {
     const treeContainer = document.getElementById("tree-container");
     if (!treeContainer) return;
+    
+    // Просто двигаем "камеру" над готовым плакатом (это делает видеокарта телефона, работает моментально)
     treeContainer.style.transform = `translate3d(${posX}px, ${posY}px, 0) scale(${scale})`;
 
-    // when using viewport culling we need to re-evaluate nodes on pan/zoom
-    if (familyData.length > 100) {
-        const vp = computeViewportRect();
-        if (viewportChanged(vp, lastRenderViewport)) {
-            lastRenderViewport = vp;
-            render();
-        }
-    }
-
+    // Плавненько перерисовываем соединительные линии, если нужно
     scheduleDrawConnections();
 }
 

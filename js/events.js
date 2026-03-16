@@ -12,9 +12,9 @@ function addFastPressListener(element, handler) {
     });
 }
 
-const TAP_MOVE_PX = 18;
-const TAP_MAX_DURATION_MS = 450;
-const DRAG_START_PX = 12;
+const TAP_MOVE_PX = 35; // Увеличили зону прощения дрожания пальца!
+const TAP_MAX_DURATION_MS = 500; // Даем чуть больше времени на нажатие
+const DRAG_START_PX = 20; // Дерево сдвинется только при уверенном движении
 
 function isCardControlTarget(target) {
     if (!target || !target.closest) return false;
@@ -162,7 +162,7 @@ function bindStaticUiEvents() {
             }
         });
 
-        nodesLayer.addEventListener("pointerup", (event) => {
+       nodesLayer.addEventListener("pointerup", (event) => {
             if (activePointer && event.pointerId === activePointer.id) {
                 const duration = Date.now() - activePointer.startTime;
                 const dx = event.clientX - activePointer.startX;
@@ -170,10 +170,13 @@ function bindStaticUiEvents() {
                 const dist = Math.hypot(dx, dy);
                 const isTap = (!activePointer.moved && dist <= TAP_MOVE_PX)
                     || (dist <= TAP_MOVE_PX * 1.4 && duration <= TAP_MAX_DURATION_MS);
+                
                 if (activePointer.dragging) {
                     handleUp();
                 }
-                if (isTap && Date.now() - lastCardTouchToggleAt > 420) {
+                
+                // Вот наша новая строчка с 50 миллисекундами:
+                if (isTap && Date.now() - lastCardTouchToggleAt > 50) {
                     const toggled = handleCardToggleFromEventTarget(event.target);
                     if (toggled) {
                         lastCardTouchToggleAt = Date.now();
@@ -203,7 +206,7 @@ function bindStaticUiEvents() {
             handleUp();
         });
     }
-}
+
 
 document.addEventListener("mousedown", (event) => {
     if (!hasClosest(event.target, ".node-container")
@@ -351,3 +354,5 @@ window.addEventListener("load", () => {
     runDrawConnectionsFrame();
     observeCardPhotos();
 });
+window.addEventListener("resize", handleViewportResize, { passive: true });
+}
