@@ -154,16 +154,18 @@ function bindStaticUiEvents() {
         document.addEventListener("pointerdown", (event) => {
             if (isPinching) return;
             const isControl = isCardControlTarget(event.target);
+            if (isControl) return;
+
             activePointer = {
                 id: event.pointerId,
                 startX: event.clientX,
                 startY: event.clientY,
                 startTime: Date.now(),
-                allowDrag: !isControl,
+                allowDrag: true,
                 dragging: false,
                 moved: false
             };
-            if (isControl) return;
+
             handleDown(event.clientX, event.clientY);
             if (typeof dragLayer.setPointerCapture === "function") {
                 try {
@@ -277,22 +279,6 @@ document.addEventListener("touchend", (event) => {
         pinchStartPosY = posY;
     }
 });
-
-
-document.addEventListener("mousedown", (event) => {
-    if (!hasClosest(event.target, ".node-container")
-        && !hasClosest(event.target, "#home-btn")
-        && !hasClosest(event.target, "#admin-btn")
-        && !hasClosest(event.target, "#reset-tree-btn")
-        && !hasClosest(event.target, "#share-btn")
-        && !hasClosest(event.target, "#admin-panel")
-        && !isUiOverlayTarget(event.target)) {
-        handleDown(event.clientX, event.clientY);
-    }
-}, { passive: true });
-
-document.addEventListener("mousemove", (event) => handleMove(event.clientX, event.clientY), { passive: true });
-document.addEventListener("mouseup", handleUp, { passive: true });
 
 
 document.addEventListener("wheel", (event) => {
