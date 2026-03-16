@@ -147,11 +147,11 @@ function bindStaticUiEvents() {
     const bioCloseBtn = document.getElementById("bio-close-btn");
     addFastPressListener(bioCloseBtn, closeBioModal);
 
-    const treeContainer = document.getElementById("tree-container");
-    if (treeContainer) {
+    const dragLayer = document.getElementById("drag-layer");
+    if (dragLayer) {
         let activePointer = null;
 
-        treeContainer.addEventListener("pointerdown", (event) => {
+        dragLayer.addEventListener("pointerdown", (event) => {
             if (isPinching) return;
             const isControl = isCardControlTarget(event.target);
             activePointer = {
@@ -165,9 +165,16 @@ function bindStaticUiEvents() {
             };
             if (isControl) return;
             handleDown(event.clientX, event.clientY);
+            if (typeof dragLayer.setPointerCapture === "function") {
+                try {
+                    dragLayer.setPointerCapture(event.pointerId);
+                } catch (error) {
+                    // ignore capture errors (e.g., unsupported or invalid pointer)
+                }
+            }
         });
 
-        treeContainer.addEventListener("pointermove", (event) => {
+        dragLayer.addEventListener("pointermove", (event) => {
             if (activePointer && event.pointerId === activePointer.id) {
                 const dx = event.clientX - activePointer.startX;
                 const dy = event.clientY - activePointer.startY;
@@ -180,7 +187,7 @@ function bindStaticUiEvents() {
             }
         });
 
-        treeContainer.addEventListener("pointerup", (event) => {
+        dragLayer.addEventListener("pointerup", (event) => {
             if (activePointer && event.pointerId === activePointer.id) {
                 const duration = Date.now() - activePointer.startTime;
                 const dx = event.clientX - activePointer.startX;
@@ -219,7 +226,7 @@ function bindStaticUiEvents() {
             activePointer = null;
         });
 
-        treeContainer.addEventListener("pointercancel", () => {
+        dragLayer.addEventListener("pointercancel", () => {
             activePointer = null;
             handleUp();
         });
