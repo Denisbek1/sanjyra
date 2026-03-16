@@ -322,6 +322,7 @@ document.addEventListener("DOMContentLoaded", () => {
         setLoaderProgress(8, true);
         preloadImages();
         bindStaticUiEvents();
+        loadFirebase();
         initSidebarContent();
         loadInitialLocalData();
         render();
