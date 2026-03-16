@@ -164,19 +164,6 @@ function bindStaticUiEvents() {
         });
 
         nodesLayer.addEventListener("pointerup", (event) => {
-            const actionTarget = event.target && event.target.closest ? event.target.closest("[data-fast-action]") : null;
-            if (actionTarget) {
-                event.stopPropagation();
-                const action = actionTarget.dataset.fastAction;
-                const nodeId = actionTarget.dataset.nodeId;
-                if (action === "add" && nodeId) openModal(nodeId);
-                if (action === "bio" && nodeId) openBioModal(nodeId);
-                if (action === "edit" && nodeId) openEditModal(nodeId);
-                if (action === "delete" && nodeId) deleteMember(nodeId);
-                activePointer = null;
-                return;
-            }
-
             if (activePointer && event.pointerId === activePointer.id) {
                 const duration = Date.now() - activePointer.startTime;
                 const dx = event.clientX - activePointer.startX;
@@ -189,8 +176,25 @@ function bindStaticUiEvents() {
                 }
                 if (isTap && Date.now() - lastCardTouchToggleAt > 420) {
                     const toggled = handleCardToggleFromEventTarget(event.target);
-                    if (toggled) lastCardTouchToggleAt = Date.now();
+                    if (toggled) {
+                        lastCardTouchToggleAt = Date.now();
+                        activePointer = null;
+                        return;
+                    }
                 }
+            }
+
+            const actionTarget = event.target && event.target.closest ? event.target.closest("[data-fast-action]") : null;
+            if (actionTarget) {
+                event.stopPropagation();
+                const action = actionTarget.dataset.fastAction;
+                const nodeId = actionTarget.dataset.nodeId;
+                if (action === "add" && nodeId) openModal(nodeId);
+                if (action === "bio" && nodeId) openBioModal(nodeId);
+                if (action === "edit" && nodeId) openEditModal(nodeId);
+                if (action === "delete" && nodeId) deleteMember(nodeId);
+                activePointer = null;
+                return;
             }
             activePointer = null;
         });
