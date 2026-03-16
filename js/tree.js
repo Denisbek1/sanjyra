@@ -1258,6 +1258,7 @@ function handleCardToggleFromEventTarget(rawTarget) {
     const nodeId = card.dataset.nodeId;
     if (!nodeId) return false;
 
+    if (!hasChildren(nodeId)) return false;
     toggleBranch(nodeId);
     return true;
 }
