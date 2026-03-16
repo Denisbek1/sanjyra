@@ -15,6 +15,7 @@ html, body {
     overflow: hidden;
     margin: 0;
     padding: 0;
+    touch-action: none;
 }
 
 body, html {
@@ -160,7 +161,7 @@ body.loading {
     transform-origin: 0 0;
     /* transform: translateZ(0); */
     cursor: grab;
-    touch-action: pinch-zoom;
+    touch-action: none;
 }
 
 #drag-layer {
