@@ -17,7 +17,9 @@ const TAP_MAX_DURATION_MS = 450;
 const DRAG_START_PX = 12;
 
 function isCardControlTarget(target) {
-    return Boolean(target && target.closest && target.closest(".add-plus-inline, .bio-btn-inline, .node-icon-btn"));
+    if (!target || !target.closest) return false;
+    const control = target.closest(".add-plus-inline, .bio-btn-inline, .node-icon-btn");
+    return Boolean(control && control.contains(target));
 }
 
 function bindStaticUiEvents() {
@@ -154,10 +156,7 @@ function bindStaticUiEvents() {
                 const dist = Math.hypot(dx, dy);
                 if (dist > TAP_MOVE_PX) activePointer.moved = true;
                 if (activePointer.allowDrag && dist > DRAG_START_PX) {
-                    if (!activePointer.dragging) {
-                        handleDown(event.clientX, event.clientY);
-                        activePointer.dragging = true;
-                    }
+                    activePointer.dragging = true;
                     handleMove(event.clientX, event.clientY);
                 }
             }
