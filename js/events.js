@@ -156,6 +156,7 @@ function bindStaticUiEvents() {
             const isControl = isCardControlTarget(event.target);
             if (isControl) return;
 
+            event.preventDefault();
             activePointer = {
                 id: event.pointerId,
                 startX: event.clientX,
@@ -169,6 +170,7 @@ function bindStaticUiEvents() {
 
         document.addEventListener("pointermove", (event) => {
             if (activePointer && event.pointerId === activePointer.id) {
+                event.preventDefault();
                 const dx = event.clientX - activePointer.startX;
                 const dy = event.clientY - activePointer.startY;
                 const dist = Math.hypot(dx, dy);
@@ -186,10 +188,11 @@ function bindStaticUiEvents() {
                     }
                 }
                 if (activePointer.allowDrag) {
+                    event.preventDefault();
                     handleMove(event.clientX, event.clientY);
                 }
             }
-        });
+        }, { passive: false });
 
         document.addEventListener("pointerup", (event) => {
             if (activePointer && event.pointerId === activePointer.id) {
