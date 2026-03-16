@@ -2,7 +2,6 @@ function addFastPressListener(element, handler) {
     if (!element) return;
 
     element.addEventListener("pointerup", (event) => {
-        event.preventDefault();
         handler(event);
     });
 
@@ -75,7 +74,6 @@ function bindStaticUiEvents() {
         pendingList.addEventListener("pointerup", (event) => {
             const target = event.target && event.target.closest ? event.target.closest("[data-pending-action]") : null;
             if (!target) return;
-            event.preventDefault();
             event.stopPropagation();
             const action = target.dataset.pendingAction;
             const pendingId = target.dataset.pendingId;
