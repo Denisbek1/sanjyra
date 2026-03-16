@@ -1,8 +1,24 @@
 function addFastPressListener(element, handler) {
     if (!element) return;
 
+    let startX = 0;
+    let startY = 0;
+    let startTime = 0;
+
+    element.addEventListener("pointerdown", (event) => {
+        startX = event.clientX;
+        startY = event.clientY;
+        startTime = Date.now();
+    });
+
     element.addEventListener("pointerup", (event) => {
-        handler(event);
+        const dx = event.clientX - startX;
+        const dy = event.clientY - startY;
+        const dist = Math.hypot(dx, dy);
+        const duration = Date.now() - startTime;
+        if (dist <= TAP_MOVE_PX && duration <= TAP_MAX_DURATION_MS) {
+            handler(event);
+        }
     });
 
     element.addEventListener("keydown", (event) => {
@@ -147,6 +163,9 @@ function bindStaticUiEvents() {
                 dragging: false,
                 moved: false
             };
+            if (!isControl) {
+                handleDown(event.clientX, event.clientY);
+            }
         });
 
         nodesLayer.addEventListener("pointermove", (event) => {
@@ -206,6 +225,7 @@ function bindStaticUiEvents() {
             handleUp();
         });
     }
+}
 
 
 document.addEventListener("mousedown", (event) => {
@@ -223,80 +243,6 @@ document.addEventListener("mousedown", (event) => {
 document.addEventListener("mousemove", (event) => handleMove(event.clientX, event.clientY), { passive: true });
 document.addEventListener("mouseup", handleUp, { passive: true });
 
-document.addEventListener("touchstart", (event) => {
-    if (isUiOverlayTarget(event.target)) return;
-
-    if (event.touches.length === 2) {
-        event.preventDefault();
-        clearTimeout(viewportAnimationTimer);
-        setViewportTransition(0);
-        isPinching = true;
-        dragging = false;
-        pinchStartDistance = getTouchDistance(event.touches[0], event.touches[1]);
-        pinchStartScale = scale;
-        pinchStartPosX = posX;
-        pinchStartPosY = posY;
-        return;
-    }
-
-    if (event.touches.length === 1
-        && !hasClosest(event.target, "#admin-panel")
-        && !hasClosest(event.target, "#reset-tree-btn")
-        && !hasClosest(event.target, "#share-btn")
-        && !isUiOverlayTarget(event.target)
-        && !isCardControlTarget(event.target)) {
-        handleDown(event.touches[0].clientX, event.touches[0].clientY);
-    }
-}, { passive: false });
-
-document.addEventListener("touchmove", (event) => {
-    if (isPinching && event.touches.length === 2) {
-        event.preventDefault();
-        const touchA = event.touches[0];
-        const touchB = event.touches[1];
-        const currentDistance = getTouchDistance(touchA, touchB);
-        if (pinchStartDistance > 0) {
-            const maxScale = window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT ? 2.2 : 3;
-            const nextScale = Math.min(Math.max(pinchStartScale * (currentDistance / pinchStartDistance), 0.1), maxScale);
-            const midpoint = getTouchMidpoint(touchA, touchB);
-            const worldX = (midpoint.x - pinchStartPosX) / pinchStartScale;
-            const worldY = (midpoint.y - pinchStartPosY) / pinchStartScale;
-
-            scale = nextScale;
-            posX = midpoint.x - (worldX * scale);
-            posY = midpoint.y - (worldY * scale);
-            scheduleUpdateTransform();
-        }
-        return;
-    }
-
-    if (!dragging) return;
-    event.preventDefault();
-    handleMove(event.touches[0].clientX, event.touches[0].clientY);
-}, { passive: false });
-
-document.addEventListener("touchend", (event) => {
-    if (isPinching && event.touches.length < 2) {
-        isPinching = false;
-        pinchStartDistance = 0;
-        pinchStartScale = scale;
-        pinchStartPosX = posX;
-        pinchStartPosY = posY;
-
-        if (event.touches.length === 1 && !isUiOverlayTarget(event.target)) {
-            handleDown(event.touches[0].clientX, event.touches[0].clientY);
-            return;
-        }
-    }
-
-    handleUp();
-});
-
-document.addEventListener("touchcancel", () => {
-    isPinching = false;
-    pinchStartDistance = 0;
-    handleUp();
-});
 
 document.addEventListener("wheel", (event) => {
     if (isUiOverlayTarget(event.target)) return;
@@ -324,11 +270,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
         setLoaderProgress(8, true);
-        preloadImages();
+        if (typeof preloadImages === "function") preloadImages();
         bindStaticUiEvents();
         loadFirebase();
-        initSidebarContent();
-        loadInitialLocalData();
+        if (typeof initSidebarContent === "function") initSidebarContent();
+        if (typeof loadInitialLocalData === "function") loadInitialLocalData();
         render();
         centerOnRootPerson({
             animate: true,
@@ -349,10 +295,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-window.addEventListener("resize", handleViewportResize, { passive: true });
 window.addEventListener("load", () => {
     runDrawConnectionsFrame();
     observeCardPhotos();
 });
-window.addEventListener("resize", handleViewportResize, { passive: true });
+if (typeof handleViewportResize === "function") {
+    window.addEventListener("resize", handleViewportResize, { passive: true });
 }
