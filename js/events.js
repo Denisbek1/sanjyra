@@ -151,7 +151,7 @@ function bindStaticUiEvents() {
     if (dragLayer) {
         let activePointer = null;
 
-        dragLayer.addEventListener("pointerdown", (event) => {
+        document.addEventListener("pointerdown", (event) => {
             if (isPinching) return;
             const isControl = isCardControlTarget(event.target);
             activePointer = {
@@ -174,7 +174,7 @@ function bindStaticUiEvents() {
             }
         });
 
-        dragLayer.addEventListener("pointermove", (event) => {
+        document.addEventListener("pointermove", (event) => {
             if (activePointer && event.pointerId === activePointer.id) {
                 const dx = event.clientX - activePointer.startX;
                 const dy = event.clientY - activePointer.startY;
@@ -187,7 +187,7 @@ function bindStaticUiEvents() {
             }
         });
 
-        dragLayer.addEventListener("pointerup", (event) => {
+        document.addEventListener("pointerup", (event) => {
             if (activePointer && event.pointerId === activePointer.id) {
                 const duration = Date.now() - activePointer.startTime;
                 const dx = event.clientX - activePointer.startX;
@@ -226,7 +226,7 @@ function bindStaticUiEvents() {
             activePointer = null;
         });
 
-        dragLayer.addEventListener("pointercancel", () => {
+        document.addEventListener("pointercancel", () => {
             activePointer = null;
             handleUp();
         });
