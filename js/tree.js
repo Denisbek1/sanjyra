@@ -2417,12 +2417,20 @@ function toggleBranch(nodeId) {
         nodeZoomMemory.set(node.id, scale);
         // after layout has updated, zoom out/in to fit all direct children
         setTimeout(() => {
+            const directChildren = getTreeChildren(node.id, null);
+            const firstChild = directChildren[0];
+            if (firstChild) {
+                const childEl = document.querySelector(`[data-node-id="${firstChild.id}"]`);
+                if (childEl && typeof childEl.scrollIntoView === "function") {
+                    childEl.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+            }
             centerViewOnExpandedChildren(node, {
                 animate: true,
                 duration: 460,
                 allowZoomIn: true
             });
-        }, 200);
+        }, 100);
     } else {
         setTimeout(() => {
             const savedScale = nodeZoomMemory.get(node.id);
