@@ -216,7 +216,7 @@ body.loading {
 
 /* prevent browser gestures on individual cards, dragging handled by #tree-container */
 .node-container {
-    touch-action: none;
+    touch-action: manipulation;
 }
 
 .node-root {

@@ -147,11 +147,11 @@ function bindStaticUiEvents() {
     const bioCloseBtn = document.getElementById("bio-close-btn");
     addFastPressListener(bioCloseBtn, closeBioModal);
 
-    const nodesLayer = document.getElementById("nodes-layer");
-    if (nodesLayer) {
+    const treeContainer = document.getElementById("tree-container");
+    if (treeContainer) {
         let activePointer = null;
 
-        nodesLayer.addEventListener("pointerdown", (event) => {
+        treeContainer.addEventListener("pointerdown", (event) => {
             if (isPinching) return;
             const isControl = isCardControlTarget(event.target);
             activePointer = {
@@ -168,7 +168,7 @@ function bindStaticUiEvents() {
             }
         });
 
-        nodesLayer.addEventListener("pointermove", (event) => {
+        treeContainer.addEventListener("pointermove", (event) => {
             if (activePointer && event.pointerId === activePointer.id) {
                 const dx = event.clientX - activePointer.startX;
                 const dy = event.clientY - activePointer.startY;
@@ -181,7 +181,7 @@ function bindStaticUiEvents() {
             }
         });
 
-       nodesLayer.addEventListener("pointerup", (event) => {
+        treeContainer.addEventListener("pointerup", (event) => {
             if (activePointer && event.pointerId === activePointer.id) {
                 const duration = Date.now() - activePointer.startTime;
                 const dx = event.clientX - activePointer.startX;
@@ -220,12 +220,57 @@ function bindStaticUiEvents() {
             activePointer = null;
         });
 
-        nodesLayer.addEventListener("pointercancel", () => {
+        treeContainer.addEventListener("pointercancel", () => {
             activePointer = null;
             handleUp();
         });
     }
 }
+
+document.addEventListener("touchstart", (event) => {
+    if (event.touches.length !== 2) return;
+    if (isUiOverlayTarget(event.target)) return;
+    event.preventDefault();
+    clearTimeout(viewportAnimationTimer);
+    setViewportTransition(0);
+    isPinching = true;
+    dragging = false;
+    pinchStartDistance = getTouchDistance(event.touches[0], event.touches[1]);
+    pinchStartScale = scale;
+    pinchStartPosX = posX;
+    pinchStartPosY = posY;
+}, { passive: false });
+
+document.addEventListener("touchmove", (event) => {
+    if (!isPinching || event.touches.length !== 2) return;
+    event.preventDefault();
+    const touchA = event.touches[0];
+    const touchB = event.touches[1];
+    const currentDistance = getTouchDistance(touchA, touchB);
+    if (pinchStartDistance > 0) {
+        const maxScale = window.innerWidth <= MOBILE_LAYOUT_BREAKPOINT ? 2.2 : 3;
+        const nextScale = Math.min(Math.max(pinchStartScale * (currentDistance / pinchStartDistance), 0.1), maxScale);
+        const midpoint = getTouchMidpoint(touchA, touchB);
+        const worldX = (midpoint.x - pinchStartPosX) / pinchStartScale;
+        const worldY = (midpoint.y - pinchStartPosY) / pinchStartScale;
+
+        scale = nextScale;
+        posX = midpoint.x - (worldX * scale);
+        posY = midpoint.y - (worldY * scale);
+        scheduleUpdateTransform();
+    }
+}, { passive: false });
+
+document.addEventListener("touchend", (event) => {
+    if (!isPinching) return;
+    if (event.touches.length < 2) {
+        isPinching = false;
+        pinchStartDistance = 0;
+        pinchStartScale = scale;
+        pinchStartPosX = posX;
+        pinchStartPosY = posY;
+    }
+});
 
 
 document.addEventListener("mousedown", (event) => {
