@@ -988,6 +988,7 @@ async function openModal(parentId) {
     if (!overlay || !titleEl || !parentNameEl || !confirmTextEl || !saveBtn || !nameInput || !dateInput || !genderInput) return;
 
     overlay.style.display = "flex";
+    overlay.dataset.openedAt = String(Date.now());
     const modal = document.getElementById("member-modal-content");
     if (modal) modal.classList.add("open");
     titleEl.style.display = "none";

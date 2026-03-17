@@ -104,6 +104,8 @@ function bindStaticUiEvents() {
     const modalOverlay = document.getElementById("modal-overlay");
     if (modalOverlay) {
         modalOverlay.addEventListener("click", (event) => {
+            const openedAt = Number(modalOverlay.dataset.openedAt || 0);
+            if (Date.now() - openedAt < 200) return;
             if (event.target === modalOverlay) closeModal();
         });
     }
