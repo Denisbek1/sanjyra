@@ -38,6 +38,26 @@
     transform: translateY(0);
 }
 
+/* Add modal (кошуу) centered, compact with 32px side gutters */
+#member-modal-content {
+    left: 32px;
+    right: 32px;
+    top: 16px;
+    bottom: auto;
+    width: calc(100% - 64px);
+    max-width: 360px;
+    margin: 0 auto;
+    max-height: 70dvh;
+}
+
+#member-modal-content.open {
+    transform: translateY(0);
+}
+
+#member-modal-content .sheet-body {
+    padding: 12px 12px 100px;
+}
+
 /* (sheet layout rules defined later) */
 
 
@@ -97,7 +117,7 @@ body, html {
     position: fixed;
     inset: 0;
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: center;
     pointer-events: auto;
 }
@@ -1226,15 +1246,18 @@ button i {
 }
 
 .bio-modal {
-    left: 16px;
-    right: 16px;
-    bottom: 16px;
-    width: auto;
-    max-width: 420px;
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: min(420px, calc(100% - 64px));
+    margin: auto;
     max-height: 82dvh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
     background:
         radial-gradient(circle at 85% 14%, rgba(255, 214, 138, 0.15), transparent 32%),
         linear-gradient(145deg, rgba(27, 33, 44, 0.98), rgba(16, 20, 30, 0.98));
@@ -1268,7 +1291,7 @@ button i {
 .bio-modal-body {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 10px 2px 0;
+    padding: 10px 16px 0;
 }
 
 .bio-modal::before {
@@ -1854,7 +1877,7 @@ textarea:focus { border-color: var(--accent-gold); }
 
 @media (max-width: 640px) {
     .bio-modal {
-        width: 100%;
+        width: min(420px, calc(100% - 64px));
         max-width: 420px;
         max-height: 85dvh;
         padding: 0;
