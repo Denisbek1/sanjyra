@@ -1795,8 +1795,36 @@ function render() {
                     </div>
                 </div>
             `;
-            ancestryEl.addEventListener("pointerup", () => {
-                openFullLineageModal();
+            let lineageTapStartX = 0;
+            let lineageTapStartY = 0;
+            let lineageTapStartTime = 0;
+            let lineageTapMoved = false;
+
+            ancestryEl.addEventListener("pointerdown", (event) => {
+                lineageTapStartX = event.clientX;
+                lineageTapStartY = event.clientY;
+                lineageTapStartTime = Date.now();
+                lineageTapMoved = false;
+            });
+
+            ancestryEl.addEventListener("pointermove", (event) => {
+                const dx = event.clientX - lineageTapStartX;
+                const dy = event.clientY - lineageTapStartY;
+                const dist = Math.hypot(dx, dy);
+                const tapMove = (typeof TAP_MOVE_PX === "number" ? TAP_MOVE_PX : 8);
+                if (dist > tapMove) lineageTapMoved = true;
+            });
+
+            ancestryEl.addEventListener("pointerup", (event) => {
+                const dx = event.clientX - lineageTapStartX;
+                const dy = event.clientY - lineageTapStartY;
+                const dist = Math.hypot(dx, dy);
+                const tapMove = (typeof TAP_MOVE_PX === "number" ? TAP_MOVE_PX : 8);
+                const tapMax = (typeof TAP_MAX_DURATION_MS === "number" ? TAP_MAX_DURATION_MS : 220);
+                const duration = Date.now() - lineageTapStartTime;
+                if (!lineageTapMoved && dist <= tapMove && duration <= tapMax) {
+                    openFullLineageModal();
+                }
             });
             nodesLayer.appendChild(ancestryEl);
         }
