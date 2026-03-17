@@ -111,6 +111,9 @@ function bindStaticUiEvents() {
     const memberModalContent = document.getElementById("member-modal-content");
     if (memberModalContent) memberModalContent.addEventListener("pointerdown", (event) => event.stopPropagation());
 
+    const memberModalCloseBtn = document.getElementById("member-modal-close-btn");
+    addFastPressListener(memberModalCloseBtn, closeModal);
+
     const memberModalSaveBtn = document.getElementById("member-modal-save-btn");
     addFastPressListener(memberModalSaveBtn, saveMemberAction);
 
@@ -131,6 +134,15 @@ function bindStaticUiEvents() {
     if (newNameInput) {
         newNameInput.addEventListener("focus", () => {
             setTimeout(() => newNameInput.scrollIntoView({ behavior: "smooth", block: "center" }), 300);
+        });
+    }
+
+    if (memberModalContent) {
+        memberModalContent.addEventListener("focusin", (event) => {
+            const target = event.target;
+            if (target && typeof target.scrollIntoView === "function") {
+                setTimeout(() => target.scrollIntoView({ behavior: "smooth", block: "center" }), 250);
+            }
         });
     }
 
@@ -286,8 +298,47 @@ document.addEventListener("touchend", (event) => {
 });
 
 document.addEventListener("touchmove", (event) => {
+    const target = event.target;
+    const allowScroll = target && typeof target.closest === "function" && (
+        target.closest(".modal-content") ||
+        target.closest("#member-modal-content") ||
+        target.closest(".bio-modal") ||
+        target.closest(".biography-section") ||
+        target.closest("#mobile-sidebar") ||
+        target.closest(".sidebar-content")
+    );
+    if (allowScroll) return;
     event.preventDefault();
 }, { passive: false });
+
+document.addEventListener("keydown", (event) => {
+    const modal = document.getElementById("member-modal-content");
+    const overlay = document.getElementById("modal-overlay");
+    if (!modal || !overlay) return;
+    const isOpen = overlay.style.display !== "none" && overlay.style.display !== "";
+    if (!isOpen) return;
+
+    if (event.key === "Escape") {
+        event.preventDefault();
+        closeModal();
+        return;
+    }
+
+    if (event.key !== "Tab") return;
+    const focusable = modal.querySelectorAll(
+        "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])"
+    );
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+    }
+});
 
 
 document.addEventListener("wheel", (event) => {

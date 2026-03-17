@@ -128,19 +128,26 @@
 
     <div id="modal-overlay">
         <div id="member-modal-content" class="modal-content" role="dialog" aria-modal="true" aria-labelledby="member-modal-title" aria-describedby="member-modal-confirm-text">
-            <h2 id="member-modal-title" class="text-lg font-bold mb-3 text-center text-white">Добавить человека</h2>
-            <div id="member-modal-parent-name" class="member-modal-parent-name"></div>
-            <div id="member-modal-confirm-text" class="member-modal-confirm-text">Бул адамга бала кошосузбу?</div>
-            <input type="text" id="new-name" name="new-name" placeholder="Имя" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-            <input type="text" id="new-date" name="new-date" placeholder="Год рождения" maxlength="4" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-            <div class="gender-label">Пол</div>
-            <select id="new-gender" class="gender-select">
-                <option value="male">эркек</option>
-                <option value="female">аял</option>
-            </select>
-            <div class="flex gap-2">
-                <button id="member-modal-save-btn" class="btn-save">Сактоо</button>
-                <button id="member-modal-cancel-btn" class="btn-save bg-gray-600 text-white">Жок</button>
+            <div class="sheet-header">
+                <h2 id="member-modal-title" class="text-lg font-bold text-center text-white">Добавить человека</h2>
+                <button id="member-modal-close-btn" class="sheet-close" aria-label="Жабуу">&times;</button>
+            </div>
+            <div class="sheet-body">
+                <div id="member-modal-parent-name" class="member-modal-parent-name"></div>
+                <div id="member-modal-confirm-text" class="member-modal-confirm-text">Бул адамга бала кошосузбу?</div>
+                <input type="text" id="new-name" name="new-name" placeholder="Имя" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                <input type="text" id="new-date" name="new-date" placeholder="Год рождения" maxlength="4" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                <div class="gender-label">Пол</div>
+                <select id="new-gender" class="gender-select">
+                    <option value="male">эркек</option>
+                    <option value="female">аял</option>
+                </select>
+            </div>
+            <div class="sheet-footer">
+                <div class="flex gap-2">
+                    <button id="member-modal-save-btn" class="btn-save">Сактоо</button>
+                    <button id="member-modal-cancel-btn" class="btn-save bg-gray-600 text-white">Жок</button>
+                </div>
             </div>
         </div>
     </div>
