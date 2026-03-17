@@ -146,6 +146,18 @@ function bindStaticUiEvents() {
         });
     }
 
+    setupSheetDrag(
+        document.getElementById("member-modal-content"),
+        document.querySelector("#member-modal-content .sheet-header"),
+        closeModal
+    );
+
+    setupSheetDrag(
+        document.getElementById("sanjyra-modal"),
+        document.querySelector("#sanjyra-modal .bio-modal-head"),
+        closeBioModal
+    );
+
     const bioOverlay = document.getElementById("bio-overlay");
     if (bioOverlay) {
         bioOverlay.addEventListener("click", (event) => {
@@ -252,6 +264,51 @@ function bindStaticUiEvents() {
     }
 }
 
+function setupSheetDrag(modalEl, handleEl, onClose) {
+    if (!modalEl || !handleEl || typeof onClose !== "function") return;
+    let startY = 0;
+    let currentY = 0;
+    let draggingSheet = false;
+
+    const onMove = (event) => {
+        if (!draggingSheet) return;
+        const dy = Math.max(0, event.clientY - startY);
+        currentY = dy;
+        modalEl.style.transform = `translateY(${dy}px)`;
+    };
+
+    const onUp = () => {
+        if (!draggingSheet) return;
+        draggingSheet = false;
+        if (currentY > 80) {
+            modalEl.style.transition = "transform 200ms ease";
+            modalEl.style.transform = "translateY(100%)";
+            setTimeout(() => {
+                modalEl.style.transition = "";
+                modalEl.style.transform = "";
+                onClose();
+            }, 200);
+        } else {
+            modalEl.style.transition = "transform 200ms ease";
+            modalEl.style.transform = "translateY(0)";
+            setTimeout(() => {
+                modalEl.style.transition = "";
+            }, 200);
+        }
+    };
+
+    handleEl.addEventListener("pointerdown", (event) => {
+        startY = event.clientY;
+        currentY = 0;
+        draggingSheet = true;
+        modalEl.style.transition = "none";
+        handleEl.setPointerCapture?.(event.pointerId);
+    });
+    handleEl.addEventListener("pointermove", onMove);
+    handleEl.addEventListener("pointerup", onUp);
+    handleEl.addEventListener("pointercancel", onUp);
+}
+
 document.addEventListener("touchstart", (event) => {
     if (event.touches.length !== 2) return;
     if (isUiOverlayTarget(event.target)) return;
@@ -314,18 +371,26 @@ document.addEventListener("touchmove", (event) => {
 document.addEventListener("keydown", (event) => {
     const modal = document.getElementById("member-modal-content");
     const overlay = document.getElementById("modal-overlay");
-    if (!modal || !overlay) return;
-    const isOpen = overlay.style.display !== "none" && overlay.style.display !== "";
-    if (!isOpen) return;
+    const bioModal = document.getElementById("sanjyra-modal");
+    const bioOverlay = document.getElementById("bio-overlay");
+
+    const isMemberOpen = modal && overlay && overlay.style.display !== "none" && overlay.style.display !== "";
+    const isBioOpen = bioModal && bioOverlay && bioOverlay.style.display !== "none" && bioOverlay.style.display !== "";
+
+    if (!isMemberOpen && !isBioOpen) return;
 
     if (event.key === "Escape") {
         event.preventDefault();
-        closeModal();
+        if (isBioOpen) closeBioModal();
+        if (isMemberOpen) closeModal();
         return;
     }
 
     if (event.key !== "Tab") return;
-    const focusable = modal.querySelectorAll(
+
+    const scope = isBioOpen ? bioModal : modal;
+    if (!scope) return;
+    const focusable = scope.querySelectorAll(
         "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])"
     );
     if (!focusable.length) return;
