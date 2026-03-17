@@ -988,6 +988,8 @@ async function openModal(parentId) {
     if (!overlay || !titleEl || !parentNameEl || !confirmTextEl || !saveBtn || !nameInput || !dateInput || !genderInput) return;
 
     overlay.style.display = "flex";
+    const modal = document.getElementById("member-modal-content");
+    if (modal) modal.classList.add("open");
     titleEl.style.display = "none";
     parentNameEl.style.display = "block";
     confirmTextEl.style.display = "block";
@@ -1004,6 +1006,7 @@ async function openModal(parentId) {
 function closeModal(options = {}) {
     const { recenter = false } = options;
     const overlay = document.getElementById("modal-overlay");
+    const modal = document.getElementById("member-modal-content");
     const nameInput = document.getElementById("new-name");
     const dateInput = document.getElementById("new-date");
     const genderInput = document.getElementById("new-gender");
@@ -1011,6 +1014,7 @@ function closeModal(options = {}) {
     const parentNameEl = document.getElementById("member-modal-parent-name");
     const confirmTextEl = document.getElementById("member-modal-confirm-text");
     if (!overlay || !nameInput || !dateInput || !genderInput || !titleEl || !parentNameEl || !confirmTextEl) return;
+    if (modal) modal.classList.remove("open");
 
     overlay.style.display = "none";
     titleEl.style.display = "block";

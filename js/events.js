@@ -112,7 +112,10 @@ function bindStaticUiEvents() {
     if (memberModalContent) memberModalContent.addEventListener("pointerdown", (event) => event.stopPropagation());
 
     const memberModalCloseBtn = document.getElementById("member-modal-close-btn");
-    addFastPressListener(memberModalCloseBtn, closeModal);
+    addFastPressListener(memberModalCloseBtn, (event) => {
+        if (event && typeof event.stopPropagation === "function") event.stopPropagation();
+        closeModal();
+    });
 
     const memberModalSaveBtn = document.getElementById("member-modal-save-btn");
     addFastPressListener(memberModalSaveBtn, saveMemberAction);
@@ -158,6 +161,8 @@ function bindStaticUiEvents() {
         closeBioModal
     );
 
+    initSheetStateObservers();
+
     const bioOverlay = document.getElementById("bio-overlay");
     if (bioOverlay) {
         bioOverlay.addEventListener("click", (event) => {
@@ -169,7 +174,23 @@ function bindStaticUiEvents() {
     if (bioModalShell) bioModalShell.addEventListener("pointerdown", (event) => event.stopPropagation());
 
     const bioCloseBtn = document.getElementById("bio-close-btn");
-    addFastPressListener(bioCloseBtn, closeBioModal);
+    addFastPressListener(bioCloseBtn, (event) => {
+        if (event && typeof event.stopPropagation === "function") event.stopPropagation();
+        closeBioModal();
+    });
+
+    document.querySelectorAll(".sheet-close, .bio-close").forEach((btn) => {
+        btn.addEventListener("click", (event) => {
+            event.stopPropagation();
+            const modal = btn.closest(".app-sheet");
+            if (modal && modal.id === "member-modal-content") {
+                closeModal();
+            }
+            if (modal && modal.id === "sanjyra-modal") {
+                closeBioModal();
+            }
+        });
+    });
 
     const dragLayer = document.getElementById("tree-container");
     if (dragLayer) {
@@ -219,6 +240,22 @@ function bindStaticUiEvents() {
         }, { passive: false });
 
         document.addEventListener("pointerup", (event) => {
+            const actionTarget = event.target && event.target.closest ? event.target.closest("[data-fast-action]") : null;
+            if (actionTarget) {
+                event.stopPropagation();
+                const action = actionTarget.dataset.fastAction;
+                const nodeId = actionTarget.dataset.nodeId;
+                if (action === "add" && nodeId) {
+                    console.log("openModal", nodeId);
+                    openModal(nodeId);
+                }
+                if (action === "bio" && nodeId) openBioModal(nodeId);
+                if (action === "edit" && nodeId) openEditModal(nodeId);
+                if (action === "delete" && nodeId) deleteMember(nodeId);
+                activePointer = null;
+                return;
+            }
+
             if (activePointer && event.pointerId === activePointer.id) {
                 const duration = Date.now() - activePointer.startTime;
                 const dx = event.clientX - activePointer.startX;
@@ -242,18 +279,6 @@ function bindStaticUiEvents() {
                 }
             }
 
-            const actionTarget = event.target && event.target.closest ? event.target.closest("[data-fast-action]") : null;
-            if (actionTarget && isCardControlTarget(event.target)) {
-                event.stopPropagation();
-                const action = actionTarget.dataset.fastAction;
-                const nodeId = actionTarget.dataset.nodeId;
-                if (action === "add" && nodeId) openModal(nodeId);
-                if (action === "bio" && nodeId) openBioModal(nodeId);
-                if (action === "edit" && nodeId) openEditModal(nodeId);
-                if (action === "delete" && nodeId) deleteMember(nodeId);
-                activePointer = null;
-                return;
-            }
             activePointer = null;
         });
 
@@ -262,6 +287,42 @@ function bindStaticUiEvents() {
             handleUp();
         });
     }
+}
+
+function initSheetStateObservers() {
+    const sync = () => {
+        const memberModal = document.getElementById("member-modal-content");
+        const memberOverlay = document.getElementById("modal-overlay");
+        if (memberModal && memberOverlay) {
+            const isOpen = memberOverlay.style.display !== "none" && memberOverlay.style.display !== "";
+            memberModal.classList.toggle("open", isOpen);
+        }
+
+        const bioModal = document.getElementById("sanjyra-modal");
+        const bioOverlay = document.getElementById("bio-overlay");
+        if (bioModal && bioOverlay) {
+            const isOpen = bioOverlay.style.display !== "none" && bioOverlay.style.display !== "";
+            bioModal.classList.toggle("open", isOpen);
+        }
+
+        const adminModal = document.querySelector(".admin-pass-modal");
+        if (adminModal) {
+            adminModal.classList.add("app-sheet");
+            const isOpen = adminModal.style.display !== "none";
+            adminModal.classList.toggle("open", isOpen);
+        }
+    };
+
+    sync();
+
+    const overlays = ["modal-overlay", "bio-overlay"].map((id) => document.getElementById(id)).filter(Boolean);
+    overlays.forEach((overlay) => {
+        const observer = new MutationObserver(sync);
+        observer.observe(overlay, { attributes: true, attributeFilter: ["style", "class"] });
+    });
+
+    const bodyObserver = new MutationObserver(sync);
+    bodyObserver.observe(document.body, { childList: true, subtree: true });
 }
 
 function setupSheetDrag(modalEl, handleEl, onClose) {
