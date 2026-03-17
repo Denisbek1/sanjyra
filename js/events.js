@@ -285,6 +285,10 @@ document.addEventListener("touchend", (event) => {
     }
 });
 
+document.addEventListener("touchmove", (event) => {
+    event.preventDefault();
+}, { passive: false });
+
 
 document.addEventListener("wheel", (event) => {
     if (isUiOverlayTarget(event.target)) return;

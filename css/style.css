@@ -52,7 +52,7 @@ body, html {
     width: 90vw;
     max-width: 420px;
     max-height: 85vh;
-    overflow-y: auto;
+    overflow: hidden;
     box-sizing: border-box;
     padding: 16px;
 }
@@ -61,7 +61,7 @@ body, html {
     width: 70%;
     max-width: 650px;
     max-height: 70dvh;
-    overflow-y: auto;
+    overflow: hidden;
     padding: 10px;
 }
 #member-modal-content input,
@@ -880,7 +880,7 @@ body.loading {
     color: #edf0f7;
     flex: 1;
     min-height: 0;
-    overflow-y: auto;
+    overflow: hidden;
 }
 
 .sidebar-section {
@@ -1421,7 +1421,7 @@ button i {
     width: 70%;
     max-width: 650px;
     max-height: 70dvh;
-    overflow-y: auto;
+    overflow: hidden;
     background: linear-gradient(145deg, rgba(34, 38, 48, 0.98), rgba(24, 28, 36, 0.98));
     border: 1px solid rgba(197, 160, 89, 0.35);
     border-radius: 18px;
@@ -1533,7 +1533,7 @@ textarea:focus { border-color: var(--accent-gold); }
     right: 20px;
     width: min(350px, calc(100vw - 40px));
     max-height: calc(100vh - 40px);
-    overflow-y: auto;
+    overflow: hidden;
     background: rgba(28, 33, 40, 0.96);
     border: 1px solid rgba(197, 160, 89, 0.5);
     border-radius: 16px;
@@ -2146,7 +2146,7 @@ textarea:focus { border-color: var(--accent-gold); }
 
     .sidebar-content {
         max-height: calc(100vh - 120px);
-        overflow-y: auto !important;
+        overflow: hidden !important;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
         touch-action: pan-y;
@@ -2170,7 +2170,7 @@ textarea:focus { border-color: var(--accent-gold); }
     }
 
     .biography-section {
-        overflow-y: auto !important;
+        overflow: hidden !important;
         -webkit-overflow-scrolling: touch;
         touch-action: pan-y;
     }
