@@ -1226,11 +1226,13 @@ button i {
 }
 
 .bio-modal {
-    width: 70%;
-    max-width: 650px;
-    max-height: 70dvh;
-    overflow-y: auto;
-    overflow-x: hidden;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    width: auto;
+    max-width: 420px;
+    max-height: 82dvh;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     background:
